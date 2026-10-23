@@ -1,5 +1,14 @@
 # Dashboard screenshot catalog
 
+## Installed hardware photo
+
+[`lilygo-hud-installed-park.png`](lilygo-hud-installed-park.png) is a
+user-supplied photograph of the installed HUD in Park, viewed through its
+reflective combiner at night. It is separate from the synthetic simulator
+captures below and is not overwritten by the screenshot regeneration helper.
+
+## Simulator captures
+
 These are deterministic captures of the production LVGL canvas through the SDL
 simulator. They show synthetic telemetry in direct-view mode: no projection
 mirroring, display bezel, simulated phone UI, or image retouching. They are not

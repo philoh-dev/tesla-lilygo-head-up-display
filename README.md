@@ -9,6 +9,10 @@ The project and firmware are named **Tesla Head-Up Display**.
 
 Licensed under the [MIT License](LICENSE). Copyright (c) 2026 philoh-dev.
 
+![Tesla Head-Up Display installed in the vehicle, showing the Park view on the reflective combiner](docs/images/lilygo-hud-installed-park.png)
+
+Installed HUD in Park, photographed through the reflective combiner at night.
+
 ![LILYGO road_scene: left signal and occupied blind spots](docs/images/dashboard-road-scene-simulator.png)
 
 Turn-signal arrows are [project-created vector assets](assets/icons/project/README.md)
