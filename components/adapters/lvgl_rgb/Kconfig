@@ -1,0 +1,50 @@
+menu "Tesla Head-Up Display Newhaven RGB output"
+    config TESLA_HEADUP_DISPLAY_RGB
+        bool "Use Newhaven 800x480 RGB transport (DevKitC only)"
+        default n
+        depends on IDF_TARGET_ESP32S3
+
+    if TESLA_HEADUP_DISPLAY_RGB
+        config TESLA_HEADUP_RGB_FULL_ROAD_SCENE
+            bool "Use full 800x480 road scene"
+            depends on TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE && !TESLA_HEADUP_RGB_DIAGNOSTICS
+            default y
+            help
+                Native full-panel composition, not bitmap scaling. Origin is
+                fixed to (0,0). Disable to retain the 536x240 viewport.
+
+        config TESLA_HEADUP_RGB_DIAGNOSTICS
+            bool "Raw RGB diagnostic firmware (use rgb_diagnostics firmware mode)"
+            default n
+
+        if TESLA_HEADUP_RGB_DIAGNOSTICS
+            config TESLA_HEADUP_RGB_DIAGNOSTIC_BRIGHTNESS
+                int "Diagnostic backlight brightness percent"
+                range 1 100
+                default 25
+
+            config TESLA_HEADUP_RGB_DIAGNOSTIC_MIRRORED
+                bool "Mirror diagnostic output"
+                default n
+        endif
+
+        config TESLA_HEADUP_RGB_ORIGIN_X
+            int "Dashboard X before projection mirroring"
+            range 0 264
+            default 132
+
+        config TESLA_HEADUP_RGB_ORIGIN_Y
+            int "Dashboard Y"
+            range 0 240
+            default 0
+
+        config TESLA_HEADUP_RGB_PCLK_HZ
+            int "Newhaven Rev3A pixel clock (Hz)"
+            range 28200000 40000000
+            default 29200000
+            help
+                Rev3A specifies 28.2 MHz minimum and 29.2 MHz typical.
+                Physical scanout is independent of application render rate.
+                Initial 29.2 MHz operation still requires hardware validation.
+    endif
+endmenu

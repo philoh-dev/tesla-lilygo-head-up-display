@@ -1,0 +1,8 @@
+if(COMMAND idf_component_register)
+    idf_component_register(INCLUDE_DIRS "include")
+    target_compile_features(${COMPONENT_LIB} INTERFACE cxx_std_20)
+else()
+    add_library(tesla_headup_domain INTERFACE)
+    target_include_directories(tesla_headup_domain INTERFACE include)
+    target_compile_features(tesla_headup_domain INTERFACE cxx_std_20)
+endif()

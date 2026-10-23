@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="30" viewBox="0 0 32 30">
+  <title>Right turn indicator</title>
+  <g transform="translate(32 0) scale(-1 1)">
+    <polygon points="1.5,15 20,1.5 20,9.5 30.5,9.5 30.5,20.5 20,20.5 20,28.5"
+             fill="#35D774" stroke="#35D774" stroke-width="1.5" stroke-linejoin="round"/>
+  </g>
+</svg>

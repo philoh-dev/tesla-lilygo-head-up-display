@@ -1,0 +1,3 @@
+# Never inherit self-test mode when creating a fresh normal/board-only build.
+CONFIG_TESLA_HEADUP_DISPLAY_SELF_TEST=n
+CONFIG_TESLA_HEADUP_RGB_DIAGNOSTICS=n

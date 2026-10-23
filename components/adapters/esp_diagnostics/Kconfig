@@ -1,0 +1,17 @@
+menu "Tesla Head-Up Display diagnostics"
+
+    config TESLA_HEADUP_CAN_DIAGNOSTIC_CAPTURE
+        bool "Log a bounded sample of received CAN frames"
+        default n
+        help
+            Logs validated CAN bus, identifier, length, and payload values.
+            Captures can contain vehicle-specific and sensitive information;
+            enable this only during controlled diagnostics.
+
+    config TESLA_HEADUP_CAN_DIAGNOSTIC_FRAMES_PER_SECOND
+        int "Maximum logged CAN frames per second"
+        depends on TESLA_HEADUP_CAN_DIAGNOSTIC_CAPTURE
+        range 1 256
+        default 32
+
+endmenu

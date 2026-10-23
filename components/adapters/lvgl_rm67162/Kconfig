@@ -1,0 +1,59 @@
+menu "Tesla Head-Up Display RM67162 display"
+
+    choice TESLA_HEADUP_DASHBOARD_LAYOUT
+        prompt "Dashboard layout"
+        default TESLA_HEADUP_DASHBOARD_LAYOUT_MINIMAL
+
+        config TESLA_HEADUP_DASHBOARD_LAYOUT_MINIMAL
+            bool "Minimal centered speed"
+
+        config TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE
+            bool "Road scene"
+    endchoice
+
+    config TESLA_HEADUP_DISPLAY_SPI_CLOCK_HZ
+        int "Display QSPI clock frequency"
+        default 75000000
+
+    config TESLA_HEADUP_DISPLAY_BUFFER_LINES
+        int "Lines in each LVGL DMA buffer"
+        range 8 120
+        default 40
+
+    config TESLA_HEADUP_DISPLAY_PIN_SCK
+        int "QSPI clock GPIO"
+        default 47
+
+    config TESLA_HEADUP_DISPLAY_PIN_DATA0
+        int "QSPI data 0 GPIO"
+        default 18
+
+    config TESLA_HEADUP_DISPLAY_PIN_DATA1
+        int "QSPI data 1 GPIO"
+        default 7
+
+    config TESLA_HEADUP_DISPLAY_PIN_DATA2
+        int "QSPI data 2 GPIO"
+        default 48
+
+    config TESLA_HEADUP_DISPLAY_PIN_DATA3
+        int "QSPI data 3 GPIO"
+        default 5
+
+    config TESLA_HEADUP_DISPLAY_PIN_CS
+        int "Display chip-select GPIO"
+        default 6
+
+    config TESLA_HEADUP_DISPLAY_PIN_RESET
+        int "Display reset GPIO"
+        default 17
+
+    config TESLA_HEADUP_DISPLAY_PIN_POWER
+        int "Display power GPIO"
+        default 38
+
+    config TESLA_HEADUP_DISPLAY_PROJECTION_MIRRORED
+        bool "Mirror the completed display for windshield projection"
+        default y
+
+endmenu

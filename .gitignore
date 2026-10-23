@@ -1,0 +1,17 @@
+/build/
+/build-*/
+/firmware/build/
+/firmware/build-*/
+/firmware/managed_components/
+/firmware/sdkconfig
+/firmware/sdkconfig.display-self-test
+/firmware/sdkconfig.minimal
+/firmware/sdkconfig.road_scene
+/firmware/sdkconfig.road-scene
+/firmware/sdkconfig.devkitc_n32r16v*
+/.cache/
+/compile_commands.json
+/.vscode/
+# macOS Finder metadata in the repository root and every subdirectory.
+**/.DS_Store
+__pycache__/

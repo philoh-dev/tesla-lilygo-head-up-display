@@ -1,0 +1,29 @@
+dependencies:
+  crosser/esp-lcd-panel-rm67162:
+    component_hash: 5a42a63c41455723811d1fea230d100235282fcc9c9587da55e1ab1241636bd6
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=5.0'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 0.3.0
+  idf:
+    source:
+      type: idf
+    version: 5.4.4
+  lvgl/lvgl:
+    component_hash: b702d642e03e95928046d5c6726558e6444e112420c77efa5fdb6650b0a13c5d
+    dependencies: []
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 9.3.0
+direct_dependencies:
+- crosser/esp-lcd-panel-rm67162
+- idf
+- lvgl/lvgl
+manifest_hash: 1dc041ab132b90e064b0ef0c8387385b0c243d5e330df6325348d8ff6f1dc438
+target: esp32s3
+version: 2.0.0

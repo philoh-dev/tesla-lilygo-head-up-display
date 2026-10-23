@@ -1,0 +1,11 @@
+menu "Tesla Head-Up Display bring-up"
+
+    config TESLA_HEADUP_DISPLAY_SELF_TEST
+        bool "Run the display self-test instead of DashKit BLE"
+        default n
+        help
+            Skip NimBLE initialization and publish deterministic synthetic
+            telemetry through the normal dashboard pipeline. This mode is for
+            physical display, animation, and performance validation only.
+
+endmenu

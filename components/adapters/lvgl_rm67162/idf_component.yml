@@ -1,0 +1,6 @@
+dependencies:
+  idf: ">=5.4,<5.5"
+  crosser/esp-lcd-panel-rm67162: "0.3.0"
+  lvgl/lvgl:
+    version: "9.3.0"
+    require: public

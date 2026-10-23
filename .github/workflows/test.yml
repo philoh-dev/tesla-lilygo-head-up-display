@@ -1,0 +1,200 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  host-tests:
+    name: Host tests (${{ matrix.configuration.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration:
+          - name: debug
+            cxx_flags: ""
+            linker_flags: ""
+          - name: ubsan
+            cxx_flags: -fsanitize=undefined -fno-omit-frame-pointer
+            linker_flags: -fsanitize=undefined
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="${{ matrix.configuration.cxx_flags }}"
+          -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.configuration.linker_flags }}"
+
+      - name: Build
+        run: cmake --build build --parallel 2
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Check whitespace
+        if: matrix.configuration.name == 'debug'
+        run: git diff --check
+
+      - name: Test repository tooling
+        if: matrix.configuration.name == 'debug'
+        run: python3 -m unittest discover -s scripts/tests -v
+
+  firmware-build:
+    name: ESP32-S3 firmware build (${{ matrix.name }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: minimal
+            board: h619
+            layout: minimal
+            mode: normal
+            sdkconfig: sdkconfig.minimal
+          - name: road_scene
+            board: h619
+            layout: road_scene
+            mode: normal
+            sdkconfig: sdkconfig.road_scene
+          - name: display_self_test
+            board: h619
+            layout: road_scene
+            mode: display_self_test
+            sdkconfig: sdkconfig.display_self_test
+          - name: devkitc_n32r16v
+            board: devkitc_n32r16v
+            layout: minimal
+            mode: board_bring_up
+            sdkconfig: sdkconfig.devkitc_n32r16v
+          - name: rgb_minimal
+            board: devkitc_n32r16v
+            layout: minimal
+            mode: normal
+            sdkconfig: sdkconfig.devkitc_n32r16v.minimal
+          - name: rgb_road_scene
+            board: devkitc_n32r16v
+            layout: road_scene
+            mode: normal
+            sdkconfig: sdkconfig.devkitc_n32r16v.road_scene
+          - name: rgb_self_test_minimal
+            board: devkitc_n32r16v
+            layout: minimal
+            mode: display_self_test
+            sdkconfig: sdkconfig.devkitc_n32r16v.self_test_minimal
+          - name: rgb_self_test_road_scene
+            board: devkitc_n32r16v
+            layout: road_scene
+            mode: display_self_test
+            sdkconfig: sdkconfig.devkitc_n32r16v.self_test_road_scene
+          - name: rgb_diagnostics_minimal
+            board: devkitc_n32r16v
+            layout: minimal
+            mode: rgb_diagnostics
+            sdkconfig: sdkconfig.devkitc_n32r16v.diagnostics_minimal
+          - name: rgb_diagnostics_road_scene
+            board: devkitc_n32r16v
+            layout: road_scene
+            mode: rgb_diagnostics
+            sdkconfig: sdkconfig.devkitc_n32r16v.diagnostics_road_scene
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Build firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: v5.4.4
+          target: esp32s3
+          path: firmware
+          command: >-
+            idf.py
+            -B build-${{ matrix.name }}
+            -DSDKCONFIG=${{ matrix.sdkconfig }}
+            -DTESLA_HEADUP_BOARD_PROFILE=${{ matrix.board }}
+            -DTESLA_HEADUP_DASHBOARD_LAYOUT=${{ matrix.layout }}
+            -DTESLA_HEADUP_FIRMWARE_MODE=${{ matrix.mode }}
+            build
+
+      - name: Enforce firmware size budget
+        run: >-
+          python3 scripts/check_firmware_size.py
+          firmware/build-${{ matrix.name }}/tesla_headup_firmware.bin
+          --max-bytes 1179648
+
+  simulator-smoke-test:
+    name: LVGL simulator smoke test (${{ matrix.layout }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        layout:
+          - minimal
+          - road_scene
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Install SDL2
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libsdl2-dev
+          python3 -m pip install --requirement scripts/requirements-assets.txt
+
+      - name: Check generated RGB565A8 assets
+        run: ./scripts/generate_indicator_images.py --check
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build-simulator
+          -DCMAKE_BUILD_TYPE=Debug
+          -DTESLA_HEADUP_BUILD_SIMULATOR=ON
+          -DTESLA_HEADUP_BUILD_TESTS=ON
+          -DTESLA_HEADUP_DASHBOARD_LAYOUT=${{ matrix.layout }}
+
+      - name: Build
+        run: cmake --build build-simulator --parallel 2
+
+      - name: Test LVGL canvases and SDL output transports
+        run: >-
+          ctest --test-dir build-simulator
+          --output-on-failure
+          --tests-regex 'tesla_headup_(lvgl_dashboard_canvas|rgb_dashboard|sdl_display)_tests|tesla_headup_rgb_.*smoke'
+
+      - name: Render RGB565 smoke frame
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: >-
+          ./build-simulator/simulator/tesla_headup_simulator
+          --direct-view
+          --screenshot build-simulator/smoke-test-${{ matrix.layout }}.bmp
+
+      - name: Render Newhaven RGB smoke frames
+        env:
+          SDL_VIDEODRIVER: dummy
+        run: |
+          ./build-simulator/simulator/tesla_headup_simulator --rgb --direct-view --screenshot build-simulator/rgb-direct-${{ matrix.layout }}.bmp
+          ./build-simulator/simulator/tesla_headup_simulator --rgb --screenshot build-simulator/rgb-mirrored-${{ matrix.layout }}.bmp
+          ./build-simulator/simulator/tesla_headup_simulator --rgb-viewport --direct-view --origin-x 17 --origin-y 33 --screenshot build-simulator/rgb-compact-${{ matrix.layout }}.bmp
+          ./build-simulator/simulator/tesla_headup_simulator --rgb-diagnostics --direct-view --diagnostic-pattern corners --screenshot build-simulator/rgb-corners-${{ matrix.layout }}.bmp
+          ./build-simulator/simulator/tesla_headup_simulator --rgb-diagnostics --diagnostic-pattern viewport --origin-x 17 --origin-y 33 --screenshot build-simulator/rgb-viewport-${{ matrix.layout }}.bmp

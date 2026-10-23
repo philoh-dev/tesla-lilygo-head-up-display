@@ -1,0 +1,18 @@
+#pragma once
+
+#include "lvgl.h"
+
+extern "C" {
+LV_FONT_DECLARE(tesla_headup_inter_medium_16)
+LV_FONT_DECLARE(tesla_headup_inter_medium_18)
+LV_FONT_DECLARE(tesla_headup_inter_medium_24)
+LV_FONT_DECLARE(tesla_headup_inter_semibold_24)
+LV_FONT_DECLARE(tesla_headup_speed_font_64)
+LV_FONT_DECLARE(tesla_headup_speed_font_110)
+LV_FONT_DECLARE(tesla_headup_bold_font_110)
+LV_FONT_DECLARE(tesla_headup_bold_font_40)
+}
+
+LV_FONT_DECLARE(tesla_headup_inter_regular_64)
+LV_FONT_DECLARE(tesla_headup_inter_regular_110)
+LV_FONT_DECLARE(tesla_headup_inter_semibold_40)
