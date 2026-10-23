@@ -7,6 +7,8 @@ Energy (BLE) from a [DashKit](https://cardashkit.com/) CAN-bus bridge.
 Official repository: [philoh-dev/tesla-lilygo-head-up-display](https://github.com/philoh-dev/tesla-lilygo-head-up-display).
 The project and firmware are named **Tesla Head-Up Display**.
 
+Licensed under the [MIT License](LICENSE). Copyright (c) 2026 philoh-dev.
+
 ![LILYGO road_scene: left signal and occupied blind spots](docs/images/dashboard-road-scene-simulator.png)
 
 Turn-signal arrows are [project-created vector assets](assets/icons/project/README.md)
@@ -408,6 +410,23 @@ display self-test described in
 It disables BLE, cycles deterministic telemetry through the production
 dashboard pipeline, and reports measured refresh and flush-submission
 performance.
+
+## License and attribution
+
+Original project code, documentation, and project-created vector artwork are
+free to use, modify, and redistribute under the [MIT License](LICENSE), including
+commercial use. Redistributed copies or substantial portions must retain
+`Copyright (c) 2026 philoh-dev` and the MIT copyright and permission notice.
+
+Credit the project as **Tesla Head-Up Display by philoh-dev** and link to the
+[official repository](https://github.com/philoh-dev/tesla-lilygo-head-up-display)
+when sharing your work; this acknowledgement is appreciated. The binding
+attribution requirement is preservation of the copyright and license notice.
+
+Third-party fonts, dependencies, and externally supplied artwork keep their
+own terms and are excluded from this MIT grant. See [NOTICE](NOTICE) and the
+included font licenses. The software is provided without warranty as stated
+in the license.
 
 ## Contributing
 

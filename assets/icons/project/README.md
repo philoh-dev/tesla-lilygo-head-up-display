@@ -4,6 +4,9 @@ These arrows are independently authored geometric vector assets for
 Tesla Head-Up Display. They use a conventional filled arrowhead and short
 rectangular shaft with softly rounded joins. No Tesla bitmap is read or embedded by their preparation code.
 
+This project-created vector artwork is covered by the repository's
+[MIT License](../../../LICENSE), with attribution to philoh-dev.
+
 | Left | Right |
 | --- | --- |
 | ![Left arrow](turn-left.svg) | ![Right arrow](turn-right.svg) |
