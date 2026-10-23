@@ -24,8 +24,7 @@ The firmware is written in C++ and is designed around domain-driven design
 > [!IMPORTANT]
 > Tesla Head-Up Display is an independent project. It is not affiliated with or endorsed by
 > Tesla, Inc. Do not allow the display to obstruct the driver's view or use it
-> in a way that distracts the driver. Tesla indicator assets remain the
-> property of Tesla and are excluded from Tesla Head-Up Display's project license.
+> in a way that distracts the driver.
 
 ## Project status
 
@@ -417,7 +416,7 @@ performance.
 
 ## License and attribution
 
-Original project code, documentation, and project-created vector artwork are
+Original project code, documentation, and project-created artwork are
 free to use, modify, and redistribute under the [MIT License](LICENSE), including
 commercial use. Redistributed copies or substantial portions must retain
 `Copyright (c) 2026 philoh-dev` and the MIT copyright and permission notice.

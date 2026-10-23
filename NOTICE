@@ -3,8 +3,12 @@ Copyright (c) 2026 philoh-dev
 https://github.com/philoh-dev/tesla-lilygo-head-up-display
 
 The MIT license in LICENSE covers original project code, documentation, and
-project-created vector artwork. Retain that copyright and license notice when
+project-created artwork. Retain that copyright and license notice when
 redistributing copies or substantial portions of this work.
+
+Turn-signal arrows and both Autopilot variants are project-created artwork.
+The minimal-layout Autopilot image was generated with Codex; the road-scene
+variants are generated from project geometry.
 
 Third-party materials retain their own copyrights and license conditions;
 the project's MIT license does not relicense them:
@@ -13,9 +17,6 @@ the project's MIT license does not relicense them:
   see assets/fonts/Inter-OFL.txt.
 - Montserrat font sources and generated derivatives: SIL Open Font License 1.1;
   see assets/fonts/OFL.txt.
-- Remaining manual-sourced Tesla indicator artwork: copyright Tesla, Inc.;
-  excluded from the project MIT license. Bundling does not grant permission
-  to redistribute third-party artwork.
 - Externally supplied vehicle artwork retains the rights of its respective
   owners and is excluded from the project MIT license.
 - External dependencies retain their own licenses and notices, including

@@ -46,7 +46,7 @@ class AssetCompressionTests(unittest.TestCase):
             self.skipTest("Pillow required for native asset checks")
         total = 0
         paths = list((ROOT / "assets/vehicles/prepared").glob("*-wide.png"))
-        paths += [ROOT / "assets/icons/tesla/prepared/autopilot-road-scene-wide.png"]
+        paths += [ROOT / "assets/icons/project/prepared/autopilot-road-scene-wide.png"]
         for path in paths:
             with Image.open(path) as image:
                 colors, alpha = bytearray(), bytearray()

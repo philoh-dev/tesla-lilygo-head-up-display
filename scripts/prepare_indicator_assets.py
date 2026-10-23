@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Prepare project-created and manual-sourced dashboard indicator assets."""
+"""Prepare project-created dashboard indicator assets."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageOps
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SOURCE_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "tesla"
+SOURCE_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project"
 OUTPUT_DIRECTORY = SOURCE_DIRECTORY / "prepared"
 PROJECT_ICON_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project"
 
@@ -27,19 +27,8 @@ class Indicator:
 
 
 INDICATORS = (
-    Indicator("position-lights.png", "position-lights.png", 43, 22),
-    Indicator("low-beam.png", "low-beam.png", 43, 22),
-    Indicator("high-beam.png", "high-beam.png", 43, 22),
-    Indicator("adaptive-high-beam.png", "adaptive-high-beam.png", 43, 22),
-    Indicator("front-fog.png", "front-fog.png", 43, 22),
-    Indicator("rear-fog.png", "rear-fog.png", 43, 22),
     Indicator("autopilot.png", "autopilot.png", 32, 30),
-    Indicator(
-        "autopilot.png",
-        "autopilot-road-scene.png",
-        38,
-        36,
-    ),
+
 )
 
 

@@ -1,4 +1,4 @@
-# Project-created turn indicators
+# Project-created dashboard indicators
 
 These arrows are independently authored geometric vector assets for
 Tesla Head-Up Display. They use a conventional filled arrowhead and short
@@ -34,3 +34,13 @@ python3 scripts/generate_indicator_images.py --check
 Prepared PNGs live in `prepared/`; the shared RGB565A8 descriptors live in
 `components/adapters/lvgl_rm67162/assets/indicator_images.cpp`. The original
 manual-sourced turn-arrow PNGs and legacy simulator bitmap have been removed.
+
+## Autopilot artwork
+
+`autopilot.png` is the original Codex-generated minimal-layout source, as
+confirmed by the contributor. Its prepared variant remains 32 x 30. The compact
+38 x 36 and native 77 x 72 road-scene badges are produced by `native_autopilot()`
+from project geometry. All source and prepared indicators live in this folder;
+none are sourced from Tesla owner-manual bitmaps. Unused lighting artwork and
+its generated descriptors have been removed. These project-created assets are
+covered by the root license and attribution notice.

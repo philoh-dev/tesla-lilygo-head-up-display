@@ -54,18 +54,6 @@ constexpr std::array expected_images{
                   &tesla_headup::platform::assets::turn_left_image, -175},
     ExpectedImage{tesla_headup::application::Symbol::RightArrow,
                   &tesla_headup::platform::assets::turn_right_image, 175},
-    ExpectedImage{tesla_headup::application::Symbol::PositionLights,
-                  &tesla_headup::platform::assets::position_lights_image, -84},
-    ExpectedImage{tesla_headup::application::Symbol::LowBeam,
-                  &tesla_headup::platform::assets::low_beam_image, -42},
-    ExpectedImage{tesla_headup::application::Symbol::HighBeam,
-                  &tesla_headup::platform::assets::high_beam_image, 0},
-    ExpectedImage{tesla_headup::application::Symbol::AdaptiveHighBeam,
-                  &tesla_headup::platform::assets::adaptive_high_beam_image, 0},
-    ExpectedImage{tesla_headup::application::Symbol::FrontFogLight,
-                  &tesla_headup::platform::assets::front_fog_image, 42},
-    ExpectedImage{tesla_headup::application::Symbol::RearFogLight,
-                  &tesla_headup::platform::assets::rear_fog_image, 74},
     ExpectedImage{tesla_headup::application::Symbol::Autopilot,
 #if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
                   &tesla_headup::platform::assets::autopilot_road_scene_image, -175},
@@ -378,6 +366,24 @@ TEST_CASE("LVGL canvas reuses persistent image objects for dashboard symbols") {
 #endif
 }
 
+TEST_CASE("unused lighting symbols render nothing and do not consume image slots") {
+    using namespace tesla_headup::application;
+    LvglSession session;
+    tesla_headup::platform::LvglDashboardCanvas canvas;
+    CHECK(canvas.initialize(*session.display()));
+    auto* root = dashboard_content(session.display());
+    canvas.begin_frame();
+    for (const auto symbol : {Symbol::PositionLights, Symbol::LowBeam,
+         Symbol::HighBeam, Symbol::AdaptiveHighBeam, Symbol::FrontFogLight, Symbol::RearFogLight})
+        canvas.draw_symbol({FeatureId::ExteriorLights, symbol, SymbolRole::ExteriorLight});
+    for (int i = 0; i < 10; ++i)
+        CHECK(lv_obj_has_flag(lv_obj_get_child_by_type(root, i, &lv_image_class), LV_OBJ_FLAG_HIDDEN));
+    canvas.draw_symbol({FeatureId::TurnSignals, Symbol::RightArrow, SymbolRole::TurnSignal});
+    auto* arrow = lv_obj_get_child_by_type(root, 0, &lv_image_class);
+    CHECK(!lv_obj_has_flag(arrow, LV_OBJ_FLAG_HIDDEN));
+    CHECK_EQ(lv_image_get_src(arrow), &tesla_headup::platform::assets::turn_right_image);
+}
+
 TEST_CASE("LVGL turn arrows alternate bright and dim without hiding") {
     LvglSession session;
     CHECK(session.display() != nullptr);
@@ -403,13 +409,18 @@ TEST_CASE("LVGL turn arrows alternate bright and dim without hiding") {
                      illuminated ? LV_OPA_COVER : LV_OPA_50);
         }
     }
-    // Reusing a dim arrow's slot must not dim a different dashboard symbol.
+    // A subsequent Autopilot symbol must use full opacity.
     canvas.begin_frame();
     canvas.draw_symbol(tesla_headup::application::SymbolElement{
-        .symbol = tesla_headup::application::Symbol::LowBeam,
-        .role = tesla_headup::application::SymbolRole::ExteriorLight,
+        .symbol = tesla_headup::application::Symbol::Autopilot,
+        .role = tesla_headup::application::SymbolRole::Autopilot,
     });
+#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
+    auto* footer = lv_obj_get_child(dashboard_composition(session.display()), 1);
+    lv_obj_t* image = lv_obj_get_child_by_type(footer, 0, &lv_image_class);
+#else
     lv_obj_t* image = lv_obj_get_child_by_type(root, 0, &lv_image_class);
+#endif
     CHECK_EQ(lv_obj_get_style_image_opa(image, LV_PART_MAIN), LV_OPA_COVER);
     canvas.begin_frame();
     CHECK(lv_obj_has_flag(image, LV_OBJ_FLAG_HIDDEN));
@@ -1439,25 +1450,15 @@ TEST_CASE("road-scene canvas positions the speed cluster and right indicators") 
         .width = 32,
         .height = 30,
     });
-    canvas.draw_symbol(tesla_headup::application::SymbolElement{
-        .feature = tesla_headup::application::FeatureId::ExteriorLights,
-        .symbol = tesla_headup::application::Symbol::RearFogLight,
-        .role = tesla_headup::application::SymbolRole::ExteriorLight,
-        .horizontal_offset = 74,
-        .width = 43,
-        .height = 22,
-    });
     lv_obj_update_layout(root);
 
     lv_obj_t* speed = lv_obj_get_child_by_type(root, 0, &lv_label_class);
     lv_obj_t* unit = lv_obj_get_child_by_type(root, 1, &lv_label_class);
     auto* footer = lv_obj_get_child(dashboard_composition(session.display()), 1);
     lv_obj_t* autopilot = lv_obj_get_child_by_type(footer, 0, &lv_image_class);
-    lv_obj_t* rear_fog = lv_obj_get_child_by_type(root, 0, &lv_image_class);
     CHECK(speed != nullptr);
     CHECK(unit != nullptr);
     CHECK(autopilot != nullptr);
-    CHECK(rear_fog != nullptr);
     CHECK_EQ(
         lv_obj_get_x(unit),
         lv_obj_get_x(speed) + lv_obj_get_width(speed) + 3);
@@ -1472,54 +1473,8 @@ TEST_CASE("road-scene canvas positions the speed cluster and right indicators") 
     CHECK_EQ(lv_obj_get_width(autopilot), 38);
     CHECK_EQ(lv_obj_get_height(autopilot), 36);
     CHECK_EQ(autopilot_center, 268);
-    CHECK(lv_obj_get_x(rear_fog) + lv_obj_get_width(rear_fog) >= 520);
-    CHECK_EQ(
-        lv_obj_get_y(rear_fog) + (lv_obj_get_height(rear_fog) / 2),
-        172);
 }
 
-TEST_CASE("road-scene canvas stacks exterior lights on the right edge") {
-    LvglSession session;
-    CHECK(session.display() != nullptr);
-
-    tesla_headup::platform::LvglDashboardCanvas canvas;
-    CHECK(canvas.initialize(*session.display()));
-
-    lv_obj_t* root = dashboard_content(session.display());
-    CHECK(root != nullptr);
-
-    constexpr std::array offsets{-84, -42, 0, 42, 74};
-    constexpr std::array vertical_positions{36, 70, 104, 138, 172};
-    constexpr std::array symbols{
-        tesla_headup::application::Symbol::PositionLights,
-        tesla_headup::application::Symbol::LowBeam,
-        tesla_headup::application::Symbol::AdaptiveHighBeam,
-        tesla_headup::application::Symbol::FrontFogLight,
-        tesla_headup::application::Symbol::RearFogLight,
-    };
-    canvas.begin_frame();
-    for (std::size_t index = 0; index < symbols.size(); ++index) {
-        canvas.draw_symbol(tesla_headup::application::SymbolElement{
-            .feature = tesla_headup::application::FeatureId::ExteriorLights,
-            .symbol = symbols[index],
-            .role = tesla_headup::application::SymbolRole::ExteriorLight,
-            .horizontal_offset = static_cast<std::int16_t>(offsets[index]),
-            .width = 43,
-            .height = 22,
-        });
-    }
-    lv_obj_update_layout(root);
-
-    for (std::size_t index = 0; index < symbols.size(); ++index) {
-        lv_obj_t* image = lv_obj_get_child_by_type(
-            root, static_cast<std::int32_t>(index), &lv_image_class);
-        CHECK(image != nullptr);
-        CHECK(lv_obj_get_x(image) + lv_obj_get_width(image) >= 520);
-        CHECK_EQ(
-            lv_obj_get_y(image) + (lv_obj_get_height(image) / 2),
-            vertical_positions[index]);
-    }
-}
 
 TEST_CASE("road-scene lanes follow active Autopilot color") {
     LvglSession session;

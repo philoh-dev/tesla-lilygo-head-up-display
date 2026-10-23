@@ -441,61 +441,35 @@ bool create_road_scene(
     return true;
 }
 
-const lv_image_dsc_t& symbol_image(application::Symbol symbol, bool wide) {
+const lv_image_dsc_t* symbol_image(application::Symbol symbol, bool wide) {
 #if defined(ESP_PLATFORM) && CONFIG_TESLA_HEADUP_RGB_FULL_ROAD_SCENE
     (void)wide;
-    if (symbol == application::Symbol::Autopilot) return assets::autopilot_road_scene_wide_image;
+    if (symbol == application::Symbol::Autopilot) return &assets::autopilot_road_scene_wide_image;
 #elif !defined(ESP_PLATFORM)
-    if (wide && symbol == application::Symbol::Autopilot) return assets::autopilot_road_scene_wide_image;
+    if (wide && symbol == application::Symbol::Autopilot) return &assets::autopilot_road_scene_wide_image;
 #else
     (void)wide;
 #endif
     switch (symbol) {
     case application::Symbol::LeftArrow:
-        return assets::turn_left_image;
+        return &assets::turn_left_image;
     case application::Symbol::RightArrow:
-        return assets::turn_right_image;
+        return &assets::turn_right_image;
     case application::Symbol::PositionLights:
-        return assets::position_lights_image;
     case application::Symbol::LowBeam:
-        return assets::low_beam_image;
     case application::Symbol::HighBeam:
-        return assets::high_beam_image;
     case application::Symbol::AdaptiveHighBeam:
-        return assets::adaptive_high_beam_image;
     case application::Symbol::FrontFogLight:
-        return assets::front_fog_image;
     case application::Symbol::RearFogLight:
-        return assets::rear_fog_image;
+        return nullptr;
     case application::Symbol::Autopilot:
 #if defined(ESP_PLATFORM) && CONFIG_TESLA_HEADUP_RGB_FULL_ROAD_SCENE
-        return assets::autopilot_road_scene_wide_image;
+        return &assets::autopilot_road_scene_wide_image;
 #else
-        return assets::autopilot_road_scene_image;
+        return &assets::autopilot_road_scene_image;
 #endif
     }
-    return assets::turn_left_image;
-}
-
-std::int16_t exterior_light_vertical_position(application::Symbol symbol) {
-    switch (symbol) {
-    case application::Symbol::PositionLights:
-        return -66;
-    case application::Symbol::LowBeam:
-        return -32;
-    case application::Symbol::HighBeam:
-    case application::Symbol::AdaptiveHighBeam:
-        return 2;
-    case application::Symbol::FrontFogLight:
-        return 36;
-    case application::Symbol::RearFogLight:
-        return 70;
-    case application::Symbol::LeftArrow:
-    case application::Symbol::RightArrow:
-    case application::Symbol::Autopilot:
-        break;
-    }
-    return 0;
+    return nullptr;
 }
 
 std::array<std::int16_t, 2> symbol_position(
@@ -507,9 +481,7 @@ std::array<std::int16_t, 2> symbol_position(
                 element.symbol == application::Symbol::LeftArrow ? -45 : 45),
             -92};
     case application::SymbolRole::ExteriorLight:
-        return {
-            234,
-            exterior_light_vertical_position(element.symbol)};
+        return {element.horizontal_offset, element.vertical_offset};
     case application::SymbolRole::Autopilot:
         return {-200, 35};
     }
@@ -917,7 +889,8 @@ void LvglDashboardCanvas::draw_symbol(
         }
     }
 
-    if (!element.visible) {
+    const auto* descriptor = symbol_image(element.symbol, wide_road_scene_);
+    if (!element.visible || descriptor == nullptr) {
         return;
     }
     const bool footer_icon = element.role == application::SymbolRole::Autopilot;
@@ -926,7 +899,7 @@ void LvglDashboardCanvas::draw_symbol(
     }
 
     lv_obj_t& image = footer_icon ? *status_autopilot_ : *image_slots_[next_image_slot_++];
-    lv_image_set_src(&image, &symbol_image(element.symbol, wide_road_scene_));
+    lv_image_set_src(&image, descriptor);
     lv_obj_set_style_image_opa(
         &image,
         element.role == application::SymbolRole::TurnSignal &&

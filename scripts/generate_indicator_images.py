@@ -11,7 +11,7 @@ from asset_compression import compress_block
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-INPUT_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "tesla" / "prepared"
+INPUT_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project" / "prepared"
 PROJECT_ICON_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project" / "prepared"
 COMMON_OUTPUT_FILE = (
     PROJECT_ROOT
@@ -41,17 +41,6 @@ class Indicator:
 INDICATORS = (
     Indicator("turn-left.png", "turn_left_image", 32, 30, PROJECT_ICON_DIRECTORY),
     Indicator("turn-right.png", "turn_right_image", 32, 30, PROJECT_ICON_DIRECTORY),
-    Indicator("position-lights.png", "position_lights_image", 43, 22),
-    Indicator("low-beam.png", "low_beam_image", 43, 22),
-    Indicator("high-beam.png", "high_beam_image", 43, 22),
-    Indicator(
-        "adaptive-high-beam.png",
-        "adaptive_high_beam_image",
-        43,
-        22,
-    ),
-    Indicator("front-fog.png", "front_fog_image", 43, 22),
-    Indicator("rear-fog.png", "rear_fog_image", 43, 22),
     Indicator("autopilot.png", "autopilot_image", 32, 30),
 )
 

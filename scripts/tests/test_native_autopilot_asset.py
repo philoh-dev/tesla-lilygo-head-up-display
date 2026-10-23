@@ -41,7 +41,7 @@ class NativeAutopilotAssetTests(unittest.TestCase):
 
     def test_prepared_asset_matches_reproducible_geometry(self) -> None:
         from PIL import Image
-        with Image.open(ROOT / "assets/icons/tesla/prepared/autopilot-road-scene-wide.png") as prepared:
+        with Image.open(ROOT / "assets/icons/project/prepared/autopilot-road-scene-wide.png") as prepared:
             self.assertEqual(prepared.convert("RGBA").tobytes(), self.module.native_autopilot().tobytes())
 
     def test_compact_badge_is_presized_symmetric_and_reproducible(self) -> None:
@@ -55,7 +55,7 @@ class NativeAutopilotAssetTests(unittest.TestCase):
                 self.assertEqual(pixels[x, y], pixels[37 - x, y])
                 distance = math.hypot(x - 18.5, y - 17.5)
                 self.assertEqual(pixels[x, y][3], round(255 * max(0, min(1, radius - distance))))
-        with Image.open(ROOT / "assets/icons/tesla/prepared/autopilot-road-scene.png") as prepared:
+        with Image.open(ROOT / "assets/icons/project/prepared/autopilot-road-scene.png") as prepared:
             self.assertEqual(prepared.convert("RGBA").tobytes(), image.tobytes())
 
     def test_project_arrows_are_presized_mirrored_and_have_clean_alpha(self) -> None:

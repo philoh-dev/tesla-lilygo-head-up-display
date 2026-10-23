@@ -54,28 +54,23 @@ void show(lv_obj_t& object) {
     lv_obj_remove_flag(&object, LV_OBJ_FLAG_HIDDEN);
 }
 
-const lv_image_dsc_t& symbol_image(application::Symbol symbol) {
+const lv_image_dsc_t* symbol_image(application::Symbol symbol) {
     switch (symbol) {
     case application::Symbol::LeftArrow:
-        return assets::turn_left_image;
+        return &assets::turn_left_image;
     case application::Symbol::RightArrow:
-        return assets::turn_right_image;
+        return &assets::turn_right_image;
     case application::Symbol::PositionLights:
-        return assets::position_lights_image;
     case application::Symbol::LowBeam:
-        return assets::low_beam_image;
     case application::Symbol::HighBeam:
-        return assets::high_beam_image;
     case application::Symbol::AdaptiveHighBeam:
-        return assets::adaptive_high_beam_image;
     case application::Symbol::FrontFogLight:
-        return assets::front_fog_image;
     case application::Symbol::RearFogLight:
-        return assets::rear_fog_image;
+        return nullptr;
     case application::Symbol::Autopilot:
-        return assets::autopilot_image;
+        return &assets::autopilot_image;
     }
-    return assets::turn_left_image;
+    return nullptr;
 }
 
 }  // namespace
@@ -219,7 +214,8 @@ void LvglDashboardCanvas::draw_text(
 
 void LvglDashboardCanvas::draw_symbol(
     const application::SymbolElement& element) {
-    if (!element.visible) {
+    const auto* descriptor = symbol_image(element.symbol);
+    if (!element.visible || descriptor == nullptr) {
         return;
     }
     if (next_image_slot_ >= image_slots_.size()) {
@@ -227,7 +223,7 @@ void LvglDashboardCanvas::draw_symbol(
     }
 
     lv_obj_t& image = *image_slots_[next_image_slot_++];
-    lv_image_set_src(&image, &symbol_image(element.symbol));
+    lv_image_set_src(&image, descriptor);
     lv_obj_set_style_image_opa(
         &image,
         element.role == application::SymbolRole::TurnSignal &&

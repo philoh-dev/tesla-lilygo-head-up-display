@@ -1,16 +1,16 @@
 # Dashboard
 
 On the Newhaven/DevKitC profile, `road_scene` fills the native 800×480 output
-by default. It has six markings per lane, 128×124 ego and 160×140 blind-spot
+by default. It has six markings per lane, 128×121 ego and 160×140 blind-spot
 vehicle boxes, and driving identifiers moved toward the outer edges. It uses
 110 px Inter Regular speed, a 96 px speed-limit sign with 40 px Inter SemiBold numerals,
 and a 77×72 Autopilot box. Two transparent, full-width regions divide the output:
-the upper 85% (800×384) contains the driving graphics, while the bottom 15%
-(800×96) contains connection status on the left, Autopilot in the center and gear
+the upper 85% (800×408) contains the driving graphics, while the bottom 15%
+(800×72) contains connection status on the left, Autopilot in the center and gear
 on the right. A healthy connection replaces the left status text with fresh
 battery charge. Roads are clipped to the upper region, including during animation.
 The speed-limit sign sits at the top-right with a 24 px inset; blind-spot cars
-are centered at y=292.
+are centered at y=354.
 The Autopilot icon keeps its existing active/hidden behavior; absent or stale
 telemetry is not presented as a confirmed inactive state.
 In the left footer, a grey-outline battery with green proportional fill and a
@@ -24,14 +24,14 @@ as 60%. The underlying usable-energy calculation and freshness rules are unchang
 The native Autopilot badge is clean geometric artwork with a flat blue disk,
 a centered white wheel with curved bridge/swept lower spokes and smooth edges, prepared offline at its
 final size. The compact road scene uses the same artwork prepared at 38×36;
-the minimal layout retains its Tesla-manual icon.
+the minimal layout retains its Codex-generated project icon.
 The current speed starts beside the top of the power/recuperation rail
 at y=24; the unit follows the speed. The native rail has no horizontal marker.
-The narrower native road corridor is 100 px wide at the
-top and 210 px at the bottom; line thickness is unchanged.
+The road boundaries share a common vanishing point and equal lane widths
+at each depth; their stroke tapers continuously toward the horizon.
 Artwork is pre-sized, not scaled at runtime. LilyGO remains 536×240 with four
-markings per lane. Its road scene follows the same structure: a 536×192 driving
-region and 536×48 footer. Speed starts at (24,12), beside the top of the rail;
+markings per lane. Its road scene follows the same structure: a 536×204 driving
+region and 536×36 footer. Speed starts at (24,12), beside the top of the rail;
 the 62 px limit sign sits top-right with a 12 px inset. The rail has no horizontal
 marker. Connection/battery is left, Autopilot centered and gear right in the footer.
 `minimal` and the optional compact
@@ -303,9 +303,10 @@ panel controller.
 The simulator and hardware use the same pre-sized `RGB565A8` indicator images.
 The shared LVGL canvas keeps a fixed pool of persistent image widgets and
 reassigns their descriptor pointers each frame, avoiding runtime scaling and
-object churn. Exterior-light indicators are intentionally not registered in
-the active dashboard; their provisional decoding remains isolated for future
-validation against captured vehicle data.
+object churn. Exterior-light indicators are not registered in the active
+dashboard. Their unused artwork and LVGL descriptors have been removed, and
+both renderers ignore lighting-symbol requests. Provisional light decoding
+remains isolated for future validation against captured vehicle data.
 
 ### Lower chase-camera road scene
 
