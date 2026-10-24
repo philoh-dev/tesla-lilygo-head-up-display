@@ -127,11 +127,8 @@ if(TESLA_HEADUP_BUILD_TESTS)
     )
     target_link_libraries(tesla_headup_lvgl_dashboard_canvas_tests PRIVATE
         tesla_headup_lvgl_dashboard_canvas
+        tesla_headup_hud_runtime tesla_headup_dashkit_tesla
     )
-    if(TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "road_scene")
-        target_link_libraries(tesla_headup_lvgl_dashboard_canvas_tests PRIVATE
-            tesla_headup_hud_runtime tesla_headup_dashkit_tesla)
-    endif()
     target_compile_features(tesla_headup_lvgl_dashboard_canvas_tests PRIVATE cxx_std_20)
     add_test(
         NAME tesla_headup_lvgl_dashboard_canvas_tests

@@ -1,6 +1,10 @@
 #include "test.hpp"
 #include "tesla_headup/adapters/lvgl_rm67162/lvgl_dashboard_canvas.hpp"
 #include "tesla_headup/adapters/lvgl_rm67162/speed_font.hpp"
+#include "tesla_headup/adapters/dashkit_tesla/dashkit_telemetry_ingestor.hpp"
+#include "tesla_headup/application/dashboard/centered_vehicle_speed.hpp"
+#include "tesla_headup/application/dashboard/speed_limit_indicator.hpp"
+#include "tesla_headup/application/hud_runtime/speed_limit_presenter.hpp"
 #include <array>
 #include <cstdio>
 #include <string_view>
@@ -45,6 +49,91 @@ struct Session {
         canvas.end_frame();
     }
 };
+}
+
+TEST_CASE("True HUD renders a live DashKit speed limit through the firmware presenter") {
+    using namespace std::chrono_literals;
+    Session session;
+    application::TelemetryStore telemetry;
+    dashkit::DashKitTelemetryIngestor ingestor{telemetry};
+    application::CenteredVehicleSpeed speed;
+    application::SpeedLimitIndicator limit;
+    application::Dashboard dashboard{session.canvas};
+    CHECK(dashboard.add_feature(speed));
+    CHECK(dashboard.add_feature(limit, false));
+    application::DashboardRenderScheduler scheduler{dashboard};
+    application::SpeedLimitPresenter presenter{telemetry, limit, dashboard, scheduler};
+    std::array<std::uint8_t, 19> packet{
+        1, 1, 0, 0, 0, 0, 0x99, 0x03, 0, 0, 8,
+        0, 10, 0, 0, 0, 0, 0, 0};
+    auto* sign = lv_obj_get_child(session.root(), 0);
+    CHECK(lv_obj_has_flag(sign, LV_OBJ_FLAG_HIDDEN));
+    auto now = 0ms;
+    for (const auto raw : {10U, 26U, 6U}) {
+        packet[12] = static_cast<std::uint8_t>(raw);
+        now += 500ms;
+        CHECK_EQ(ingestor.ingest(packet, now).decoded_speed_limit_frames, 1U);
+        CHECK(presenter.refresh(now));
+        dashboard.render();
+        lv_refr_now(session.display);
+        CHECK(!lv_obj_has_flag(sign, LV_OBJ_FLAG_HIDDEN));
+        CHECK(!lv_obj_has_flag(session.label(4), LV_OBJ_FLAG_HIDDEN));
+        CHECK_EQ(std::string_view{lv_label_get_text(session.label(4))},
+                 raw == 10U ? "50" : raw == 26U ? "130" : "30");
+        unsigned red_pixels = 0;
+        unsigned white_pixels = 0;
+        for (int y = lv_obj_get_y(sign); y < lv_obj_get_y(sign) + 54; ++y)
+            for (int x = lv_obj_get_x(sign); x < lv_obj_get_x(sign) + 54; ++x) {
+                const auto pixel = session.pixels[y * 536 + x];
+                if (pixel == lv_color_to_u16(lv_color_hex(0xE02020))) ++red_pixels;
+                if (pixel == 0xFFFF) ++white_pixels;
+            }
+        CHECK(red_pixels > 400);
+        CHECK(white_pixels > 500);
+    }
+    CHECK(presenter.refresh(10s));
+    dashboard.render();
+    CHECK(lv_obj_has_flag(sign, LV_OBJ_FLAG_HIDDEN));
+    CHECK(lv_obj_has_flag(session.label(4), LV_OBJ_FLAG_HIDDEN));
+}
+
+TEST_CASE("True HUD speed limit stays on screen when speed arrives after startup") {
+    Session session;
+    // Firmware renders connection status before the first vehicle-speed packet.
+    session.canvas.begin_frame();
+    session.canvas.draw_text({.text="CONNECTING", .role=application::TextRole::StatusInfo});
+    session.canvas.end_frame();
+    for (int transition = 0; transition < 3; ++transition) {
+        session.frame("0");
+        lv_refr_now(session.display);
+        auto* sign = lv_obj_get_child(session.root(), 0);
+        lv_area_t bounds{};
+        lv_obj_get_coords(sign, &bounds);
+        CHECK(bounds.x1 >= 35);
+        CHECK(bounds.x2 < 501);
+        CHECK(bounds.y1 >= 35);
+        CHECK(bounds.y2 < 205);
+        CHECK(!lv_obj_has_flag(sign, LV_OBJ_FLAG_HIDDEN));
+        auto* digits = session.label(4);
+        lv_area_t digit_bounds{};
+        lv_obj_get_coords(digits, &digit_bounds);
+        CHECK(digit_bounds.x1 >= bounds.x1);
+        CHECK(digit_bounds.x2 <= bounds.x2);
+        CHECK(digit_bounds.y1 >= bounds.y1);
+        CHECK(digit_bounds.y2 <= bounds.y2);
+        unsigned ring_pixels = 0;
+        for (int y = bounds.y1; y <= bounds.y2; ++y)
+            for (int x = bounds.x1; x <= bounds.x2; ++x)
+                if (session.pixels[y * 536 + x] ==
+                    lv_color_to_u16(lv_color_hex(0xE02020))) ++ring_pixels;
+        CHECK(ring_pixels > 400);
+        auto* unit = session.label(1);
+        CHECK(std::abs(bounds.x1 * 2 + lv_obj_get_width(sign) -
+                       lv_obj_get_x(unit) * 2 - lv_obj_get_width(unit)) <= 1);
+        session.canvas.begin_frame();
+        session.canvas.draw_text({.text="50", .role=application::TextRole::SpeedLimit});
+        session.canvas.end_frame();
+    }
 }
 
 TEST_CASE("True HUD keeps all artwork inside the 35 pixel border through the pixel orbit") {

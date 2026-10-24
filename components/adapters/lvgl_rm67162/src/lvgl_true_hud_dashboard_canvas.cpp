@@ -214,6 +214,10 @@ void LvglDashboardCanvas::end_frame() {
     const int unit_y = speed_y + speed_ink.bottom - unit_ink.bottom;
     lv_obj_set_pos(unit, unit_x, unit_y);
     if (has_speed && has_unit) {
+        // Startup/no-speed frames use RIGHT_MID below. LVGL retains that
+        // alignment across set_pos(), so restore screen-coordinate positioning
+        // before placing the sign above the unit when speed becomes available.
+        lv_obj_set_align(speed_limit_sign_, LV_ALIGN_TOP_LEFT);
         lv_obj_set_pos(speed_limit_sign_,
             unit_x + (lv_obj_get_width(unit) - limit_diameter) / 2,
             std::max(inset, unit_y + unit_ink.top - 6 - limit_diameter));
