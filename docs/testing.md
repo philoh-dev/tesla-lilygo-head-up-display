@@ -219,7 +219,7 @@ be started manually. The workflow executes both a regular debug build and a
 build instrumented with UndefinedBehaviorSanitizer. Project code and tests are
 compiled with the strict warning policy defined by their CMake targets.
 
-A separate matrix job builds the normal `minimal` and `road_scene` ESP32-S3
+A separate matrix job builds the normal `true_hud` and `road_scene` ESP32-S3
 firmware plus the road-scene display-self-test binary through Espressif's
 official CI action using the pinned ESP-IDF 5.4.4 container. This compile-checks
 the microcontroller entry point, NimBLE adapter, every selectable display

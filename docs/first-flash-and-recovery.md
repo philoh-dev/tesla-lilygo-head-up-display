@@ -21,6 +21,35 @@ the display adapter. The first clean build therefore requires internet access
 to the Espressif component registry; later builds can use its local component
 cache.
 
+## Windows flash launcher
+
+From the repository root, build and flash the LILYGO H619 `true_hud` layout:
+
+```powershell
+.\scripts\flash.ps1 COM3
+```
+
+Or run `flash-true-hud.bat COM3` from a command prompt. Omit the
+port for ESP-IDF auto-detection. The launcher finds an activated ESP-IDF or the
+standard Windows ESP-IDF 5.4.4 installation and activates its environment.
+Use `-IdfPath C:\path\to\esp-idf` for another installation location.
+
+```powershell
+.\scripts\flash.ps1 COM3 -Layout road_scene
+.\scripts\flash.ps1 COM3 -Mode display_self_test
+.\scripts\flash.ps1 COM3 -NoMonitor -Baud 115200
+.\scripts\flash.ps1 -BuildOnly
+.\scripts\flash.ps1 COM3 -DryRun
+```
+
+Only `true_hud` and `road_scene` are supported. Every layout/mode pair uses its
+own `build-flash-h619-<layout>-<mode>/` directory and SDKCONFIG inside it.
+The script builds, enforces the 1,179,648-byte firmware budget, then flashes
+and opens the serial monitor. Build or size-check failures stop before flashing.
+`-NoMonitor` skips the monitor; `-BuildOnly` stops after the size check.
+`-DryRun` prints the commands without needing an SDK or accessing the board.
+Exit the serial monitor with `Ctrl+]`. Newhaven/DevKitC uses its separate scripts.
+
 ## Build
 
 From a clean checkout with ESP-IDF activated:
@@ -33,7 +62,7 @@ python3 ../scripts/check_firmware_size.py \
   build/tesla_headup_firmware.bin --max-bytes 1179648
 ```
 
-The minimal dashboard is the default. To compile the road-scene layout into a
+The `true_hud` dashboard is the default. To compile the road-scene layout into a
 separate build directory instead, run:
 
 ```sh

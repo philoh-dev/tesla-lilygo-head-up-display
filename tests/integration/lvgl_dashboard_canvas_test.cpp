@@ -5,10 +5,8 @@
 #include "tesla_headup/adapters/lvgl_rm67162/speed_font.hpp"
 
 #include "lvgl.h"
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
 #include "tesla_headup/adapters/dashkit_tesla/dashkit_telemetry_ingestor.hpp"
 #include "tesla_headup/application/hud_runtime/power_presenter.hpp"
-#endif
 
 #include <algorithm>
 #include <array>
@@ -55,11 +53,7 @@ constexpr std::array expected_images{
     ExpectedImage{tesla_headup::application::Symbol::RightArrow,
                   &tesla_headup::platform::assets::turn_right_image, 175},
     ExpectedImage{tesla_headup::application::Symbol::Autopilot,
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
                   &tesla_headup::platform::assets::autopilot_road_scene_image, -175},
-#else
-                  &tesla_headup::platform::assets::autopilot_image, -175},
-#endif
 };
 
 lv_obj_t* dashboard_composition(lv_display_t* display) {
@@ -68,21 +62,15 @@ lv_obj_t* dashboard_composition(lv_display_t* display) {
 
 lv_obj_t* dashboard_content(lv_display_t* display) {
     auto* composition = dashboard_composition(display);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     return lv_obj_get_child(composition, 0);
-#else
-    return composition;
-#endif
 }
 
 lv_obj_t* dashboard_label(lv_obj_t* driving, std::int32_t slot) {
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     if (slot == 2 || slot == 3) {
         auto* footer = lv_obj_get_child(lv_obj_get_parent(driving), 1);
         return lv_obj_get_child_by_type(footer, slot - 2, &lv_label_class);
     }
     if (slot == 4) slot = 2;
-#endif
     return lv_obj_get_child_by_type(driving, slot, &lv_label_class);
 }
 
@@ -113,7 +101,6 @@ using OrbitPixelCapture = PixelCapture<12, 8>;
 
 }  // namespace
 
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
 static int painted_bottom(lv_obj_t* label) {
     const auto* font = lv_obj_get_style_text_font(label, LV_PART_MAIN);
     int bottom = 0;
@@ -139,7 +126,6 @@ TEST_CASE("Inter digits are tabular across all dashboard fonts") {
     }
 }
 
-#endif
 
 TEST_CASE("dashboard pixel orbit is bounded periodic and independent of rendering") {
     LvglSession session;
@@ -315,11 +301,7 @@ TEST_CASE("LVGL canvas reuses persistent image objects for dashboard symbols") {
 
     lv_obj_t* root = dashboard_content(session.display());
     CHECK(root != nullptr);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     constexpr std::uint32_t expected_image_count = 13U;
-#else
-    constexpr std::uint32_t expected_image_count = 10U;
-#endif
     CHECK_EQ(
         lv_obj_get_child_count_by_type(root, &lv_image_class),
         expected_image_count);
@@ -356,32 +338,12 @@ TEST_CASE("LVGL canvas reuses persistent image objects for dashboard symbols") {
         CHECK(image != nullptr);
         CHECK(lv_obj_has_flag(image, LV_OBJ_FLAG_HIDDEN));
     }
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     lv_obj_t* vehicle = lv_obj_get_child_by_type(root, 12, &lv_image_class);
     CHECK(vehicle != nullptr);
     CHECK(!lv_obj_has_flag(vehicle, LV_OBJ_FLAG_HIDDEN));
     CHECK_EQ(
         lv_image_get_src(vehicle),
         &tesla_headup::platform::assets::road_scene_vehicle_image);
-#endif
-}
-
-TEST_CASE("unused lighting symbols render nothing and do not consume image slots") {
-    using namespace tesla_headup::application;
-    LvglSession session;
-    tesla_headup::platform::LvglDashboardCanvas canvas;
-    CHECK(canvas.initialize(*session.display()));
-    auto* root = dashboard_content(session.display());
-    canvas.begin_frame();
-    for (const auto symbol : {Symbol::PositionLights, Symbol::LowBeam,
-         Symbol::HighBeam, Symbol::AdaptiveHighBeam, Symbol::FrontFogLight, Symbol::RearFogLight})
-        canvas.draw_symbol({FeatureId::ExteriorLights, symbol, SymbolRole::ExteriorLight});
-    for (int i = 0; i < 10; ++i)
-        CHECK(lv_obj_has_flag(lv_obj_get_child_by_type(root, i, &lv_image_class), LV_OBJ_FLAG_HIDDEN));
-    canvas.draw_symbol({FeatureId::TurnSignals, Symbol::RightArrow, SymbolRole::TurnSignal});
-    auto* arrow = lv_obj_get_child_by_type(root, 0, &lv_image_class);
-    CHECK(!lv_obj_has_flag(arrow, LV_OBJ_FLAG_HIDDEN));
-    CHECK_EQ(lv_image_get_src(arrow), &tesla_headup::platform::assets::turn_right_image);
 }
 
 TEST_CASE("LVGL turn arrows alternate bright and dim without hiding") {
@@ -415,12 +377,8 @@ TEST_CASE("LVGL turn arrows alternate bright and dim without hiding") {
         .symbol = tesla_headup::application::Symbol::Autopilot,
         .role = tesla_headup::application::SymbolRole::Autopilot,
     });
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     auto* footer = lv_obj_get_child(dashboard_composition(session.display()), 1);
     lv_obj_t* image = lv_obj_get_child_by_type(footer, 0, &lv_image_class);
-#else
-    lv_obj_t* image = lv_obj_get_child_by_type(root, 0, &lv_image_class);
-#endif
     CHECK_EQ(lv_obj_get_style_image_opa(image, LV_PART_MAIN), LV_OPA_COVER);
     canvas.begin_frame();
     CHECK(lv_obj_has_flag(image, LV_OBJ_FLAG_HIDDEN));
@@ -483,7 +441,6 @@ TEST_CASE("RGB565 turn arrow dark phase produces visible green pixels") {
     }
 }
 
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
 TEST_CASE("live power packets produce visible fill above the track in both road scene sizes") {
     using namespace std::chrono_literals;
     for (bool wide : {false, true}) {
@@ -737,7 +694,6 @@ TEST_CASE("road-scene canvas shows blind-spot vehicles in matching lanes") {
         lv_image_get_src(right_vehicle),
         &tesla_headup::platform::assets::blind_spot_right_image);
 }
-#endif
 
 TEST_CASE("LVGL canvas applies the speed and unit typography") {
     LvglSession session;
@@ -763,19 +719,11 @@ TEST_CASE("LVGL canvas applies the speed and unit typography") {
     lv_obj_t* unit = lv_obj_get_child_by_type(root, 1, &lv_label_class);
     CHECK(speed != nullptr);
     CHECK(unit != nullptr);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     const lv_font_t* expected_speed_font = &tesla_headup_inter_regular_64;
-#else
-    const lv_font_t* expected_speed_font = &tesla_headup_speed_font_110;
-#endif
     CHECK_EQ(
         lv_obj_get_style_text_font(speed, LV_PART_MAIN),
         expected_speed_font);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     CHECK_EQ(lv_obj_get_style_text_font(unit, LV_PART_MAIN), &tesla_headup_inter_medium_16);
-#else
-    CHECK_EQ(lv_obj_get_style_text_font(unit, LV_PART_MAIN), &lv_font_montserrat_18);
-#endif
     CHECK(lv_color_eq(
         lv_obj_get_style_text_color(unit, LV_PART_MAIN),
         lv_color_hex(0xB8C1C5)));
@@ -790,13 +738,9 @@ TEST_CASE("LVGL canvas reserves a persistent status label with severity color") 
 
     lv_obj_t* root = dashboard_content(session.display());
     CHECK(root != nullptr);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     CHECK_EQ(lv_obj_get_child_count_by_type(root, &lv_label_class), 3U);
     CHECK_EQ(lv_obj_get_child_count_by_type(
         lv_obj_get_child(dashboard_composition(session.display()), 1), &lv_label_class), 2U);
-#else
-    CHECK_EQ(lv_obj_get_child_count_by_type(root, &lv_label_class), 5U);
-#endif
 
     canvas.begin_frame();
     canvas.draw_text(tesla_headup::application::TextElement{
@@ -809,11 +753,7 @@ TEST_CASE("LVGL canvas reserves a persistent status label with severity color") 
     lv_obj_t* status = dashboard_label(root, 2);
     CHECK(status != nullptr);
     CHECK_EQ(std::string_view{lv_label_get_text(status)}, "PAIRING REQUIRED");
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     CHECK_EQ(lv_obj_get_style_text_font(status, LV_PART_MAIN), &tesla_headup_inter_medium_18);
-#else
-    CHECK_EQ(lv_obj_get_style_text_font(status, LV_PART_MAIN), &lv_font_montserrat_18);
-#endif
     CHECK(lv_color_eq(
         lv_obj_get_style_text_color(status, LV_PART_MAIN),
         lv_color_hex(0xFF453A)));
@@ -841,11 +781,7 @@ TEST_CASE("LVGL canvas renders a persistent European speed-limit sign") {
     lv_obj_t* label = dashboard_label(root, 4);
     CHECK(label != nullptr);
     CHECK_EQ(std::string_view{lv_label_get_text(label)}, "50");
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     CHECK_EQ(lv_obj_get_style_text_font(label, LV_PART_MAIN), &tesla_headup_inter_semibold_24);
-#else
-    CHECK_EQ(lv_obj_get_style_text_font(label, LV_PART_MAIN), &lv_font_montserrat_24);
-#endif
     CHECK(lv_color_eq(
         lv_obj_get_style_text_color(label, LV_PART_MAIN),
         lv_color_hex(0x000000)));
@@ -919,20 +855,13 @@ TEST_CASE("LVGL canvas keeps unit and gear in dedicated text slots") {
     CHECK_EQ(std::string_view{lv_label_get_text(unit)}, "km/h");
     CHECK(!lv_obj_has_flag(unit, LV_OBJ_FLAG_HIDDEN));
     CHECK_EQ(std::string_view{lv_label_get_text(gear)}, "D");
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     const auto* gear_font = &tesla_headup_inter_medium_18;
-#else
-    const auto* gear_font = &lv_font_montserrat_24;
-#endif
     CHECK_EQ(lv_obj_get_style_text_font(gear, LV_PART_MAIN), gear_font);
     CHECK_EQ(lv_obj_get_y(gear), lv_obj_get_y(status));
     CHECK(lv_obj_get_x(gear) + lv_obj_get_width(gear) >= 520);
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
     CHECK(lv_obj_get_x(status) + lv_obj_get_width(status) < lv_obj_get_x(gear));
-#endif
 }
 
-#if defined(TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
 TEST_CASE("battery occupies the left footer and yields to connection warnings independent of draw order") {
   for (bool wide : {false, true}) {
     LvglSession session{wide ? 800 : 536, wide ? 480 : 240};
@@ -1579,4 +1508,3 @@ TEST_CASE("native road scene retains speed-proportional reverse park and neutral
     CHECK(lane_displacement_after_100_ms("72", "D", 1, true) >
           lane_displacement_after_100_ms("36", "D", 1, true));
 }
-#endif

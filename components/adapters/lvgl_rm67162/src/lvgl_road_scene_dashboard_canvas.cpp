@@ -455,13 +455,6 @@ const lv_image_dsc_t* symbol_image(application::Symbol symbol, bool wide) {
         return &assets::turn_left_image;
     case application::Symbol::RightArrow:
         return &assets::turn_right_image;
-    case application::Symbol::PositionLights:
-    case application::Symbol::LowBeam:
-    case application::Symbol::HighBeam:
-    case application::Symbol::AdaptiveHighBeam:
-    case application::Symbol::FrontFogLight:
-    case application::Symbol::RearFogLight:
-        return nullptr;
     case application::Symbol::Autopilot:
 #if defined(ESP_PLATFORM) && CONFIG_TESLA_HEADUP_RGB_FULL_ROAD_SCENE
         return &assets::autopilot_road_scene_wide_image;
@@ -480,8 +473,6 @@ std::array<std::int16_t, 2> symbol_position(
             static_cast<std::int16_t>(
                 element.symbol == application::Symbol::LeftArrow ? -45 : 45),
             -92};
-    case application::SymbolRole::ExteriorLight:
-        return {element.horizontal_offset, element.vertical_offset};
     case application::SymbolRole::Autopilot:
         return {-200, 35};
     }

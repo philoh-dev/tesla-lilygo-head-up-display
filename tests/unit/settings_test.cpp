@@ -26,7 +26,6 @@ TEST_CASE("settings defaults are safe and enable the driving features") {
     CHECK_EQ(settings.brightness.percent(), 100);
     CHECK(settings.enabled_features.vehicle_speed);
     CHECK(settings.enabled_features.turn_signals);
-    CHECK(settings.enabled_features.exterior_lights);
     CHECK(settings.enabled_features.autopilot);
     CHECK(settings.enabled_features.blind_spot_warnings);
     CHECK(settings.enabled_features.selected_gear);
@@ -60,7 +59,6 @@ TEST_CASE("in-memory settings adapter round trips every setting") {
     expected.brightness = *BrightnessPreference::from_percent(37);
     expected.enabled_features.vehicle_speed = false;
     expected.enabled_features.turn_signals = false;
-    expected.enabled_features.exterior_lights = false;
     expected.enabled_features.autopilot = false;
     expected.enabled_features.blind_spot_warnings = false;
     expected.enabled_features.selected_gear = false;
@@ -93,7 +91,6 @@ TEST_CASE("NVS record codec preserves every settings field") {
     expected.brightness = *BrightnessPreference::from_percent(23);
     expected.enabled_features.vehicle_speed = false;
     expected.enabled_features.turn_signals = true;
-    expected.enabled_features.exterior_lights = false;
     expected.enabled_features.autopilot = true;
     expected.enabled_features.blind_spot_warnings = false;
     expected.enabled_features.selected_gear = true;
@@ -124,6 +121,15 @@ TEST_CASE("NVS record codec rejects unknown or corrupt values") {
     record = SettingsRecord{};
     record.enabled_feature_bits = 0x80;
     CHECK(!decode_settings(record).has_value());
+}
+
+TEST_CASE("NVS records accept the retired preference bit without changing supported settings") {
+    const auto current = encode_settings(Settings{});
+    CHECK_EQ(current.enabled_feature_bits & 0x04, 0);
+    auto legacy = current;
+    legacy.enabled_feature_bits |= 0x04;
+    CHECK_EQ(decode_settings(legacy), decode_settings(current));
+    CHECK_EQ(encode_settings(*decode_settings(legacy)), current);
 }
 
 }  // namespace

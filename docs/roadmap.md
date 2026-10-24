@@ -41,9 +41,9 @@ speed as current.
 
 - [x] Add selected P/R/N/D gear decoding and presentation.
 - [x] Add modular left, right, and hazard-warning indicator visuals.
-- [x] Prototype modular exterior-light indicators, then remove them from the
-  active HUD until the provisional mappings are verified.
-- [x] Add compile-time selectable minimal and road-scene layouts.
+- [x] Remove unused exterior-light telemetry, decoders and indicators pending
+  DashKit support.
+- [x] Add compile-time selectable true-HUD and road-scene layouts.
 - Add adaptive-cruise status and set speed where available.
 - [x] Add freshness-aware fused speed-limit decoding and presentation.
 - [x] Decode battery electrical state and power limits and drive the road-scene

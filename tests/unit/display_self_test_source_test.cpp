@@ -65,9 +65,6 @@ TEST_CASE("self-test starts in Park with every other feature inactive") {
     CHECK_EQ(
         telemetry.blind_spots(0ms).current_value,
         tesla_headup::domain::BlindSpots::clear());
-    CHECK_EQ(
-        telemetry.exterior_lights(0ms).current_value,
-        tesla_headup::domain::ExteriorLights::off());
     CHECK_EQ(telemetry.speed_limit(0ms).status, SignalStatus::Unavailable);
 }
 

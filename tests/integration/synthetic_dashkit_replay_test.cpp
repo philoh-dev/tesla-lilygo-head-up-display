@@ -9,7 +9,6 @@
 #include "tesla_headup/application/dashboard/blind_spot_warnings.hpp"
 #include "tesla_headup/application/dashboard/centered_vehicle_speed.hpp"
 #include "tesla_headup/application/dashboard/dashboard.hpp"
-#include "tesla_headup/application/dashboard/exterior_light_indicators.hpp"
 #include "tesla_headup/application/dashboard/system_status_indicator.hpp"
 #include "tesla_headup/application/dashboard/selected_gear_indicator.hpp"
 #include "tesla_headup/application/dashboard/speed_limit_indicator.hpp"
@@ -17,7 +16,6 @@
 #include "tesla_headup/application/hud_runtime/autopilot_presenter.hpp"
 #include "tesla_headup/application/hud_runtime/blind_spot_presenter.hpp"
 #include "tesla_headup/application/hud_runtime/dashboard_render_scheduler.hpp"
-#include "tesla_headup/application/hud_runtime/exterior_light_presenter.hpp"
 #include "tesla_headup/application/hud_runtime/system_status_presenter.hpp"
 #include "tesla_headup/application/hud_runtime/selected_gear_presenter.hpp"
 #include "tesla_headup/application/hud_runtime/speed_limit_presenter.hpp"
@@ -46,8 +44,6 @@ using tesla_headup::application::DashboardCanvas;
 using tesla_headup::application::DashboardRenderScheduler;
 using tesla_headup::application::DisplayEdge;
 using tesla_headup::application::EdgeGradientElement;
-using tesla_headup::application::ExteriorLightIndicators;
-using tesla_headup::application::ExteriorLightPresenter;
 using tesla_headup::application::Symbol;
 using tesla_headup::application::SymbolElement;
 using tesla_headup::application::SystemStatusIndicator;
@@ -168,7 +164,6 @@ struct ReplayRuntime {
     BlindSpotWarnings blind_spot_feature;
     CenteredVehicleSpeed speed_feature;
     TurnSignalIndicators turn_signal_feature;
-    ExteriorLightIndicators exterior_light_feature;
     AutopilotIndicator autopilot_feature;
     SystemStatusIndicator system_status_feature;
     SelectedGearIndicator selected_gear_feature;
@@ -183,8 +178,6 @@ struct ReplayRuntime {
         telemetry, blind_spot_feature, scheduler};
     AutopilotPresenter autopilot_presenter{
         telemetry, autopilot_feature, scheduler};
-    ExteriorLightPresenter exterior_light_presenter{
-        telemetry, exterior_light_feature, scheduler};
     SystemStatusPresenter system_status_presenter{
         system_status_feature, scheduler};
     SelectedGearPresenter selected_gear_presenter{
@@ -200,7 +193,6 @@ struct ReplayRuntime {
         CHECK(dashboard.add_feature(blind_spot_feature));
         CHECK(dashboard.add_feature(speed_feature, false));
         CHECK(dashboard.add_feature(turn_signal_feature));
-        CHECK(dashboard.add_feature(exterior_light_feature));
         CHECK(dashboard.add_feature(autopilot_feature));
         CHECK(dashboard.add_feature(system_status_feature));
         CHECK(dashboard.add_feature(selected_gear_feature, false));
@@ -234,7 +226,6 @@ struct ReplayRuntime {
         (void)turn_signal_presenter.refresh(now);
         (void)blind_spot_presenter.refresh(now);
         (void)autopilot_presenter.refresh(now);
-        (void)exterior_light_presenter.refresh(now);
         (void)system_status_presenter.refresh(now);
         (void)selected_gear_presenter.refresh(now);
         (void)speed_limit_presenter.refresh(now);
@@ -249,15 +240,10 @@ void check_active_frame(const RecordingCanvas& canvas) {
     CHECK_EQ(canvas.text.at(3), "50");
     CHECK_EQ(canvas.edges.size(), 1U);
     CHECK_EQ(canvas.edges.front(), DisplayEdge::Left);
-    CHECK_EQ(canvas.symbols.size(), 8U);
+    CHECK_EQ(canvas.symbols.size(), 3U);
     CHECK_EQ(canvas.symbols.at(0), Symbol::LeftArrow);
     CHECK_EQ(canvas.symbols.at(1), Symbol::RightArrow);
-    CHECK_EQ(canvas.symbols.at(2), Symbol::PositionLights);
-    CHECK_EQ(canvas.symbols.at(3), Symbol::LowBeam);
-    CHECK_EQ(canvas.symbols.at(4), Symbol::AdaptiveHighBeam);
-    CHECK_EQ(canvas.symbols.at(5), Symbol::FrontFogLight);
-    CHECK_EQ(canvas.symbols.at(6), Symbol::RearFogLight);
-    CHECK_EQ(canvas.symbols.at(7), Symbol::Autopilot);
+    CHECK_EQ(canvas.symbols.at(2), Symbol::Autopilot);
 }
 
 TEST_CASE("synthetic DashKit journey replays from BLE notification to HUD") {
@@ -278,7 +264,6 @@ TEST_CASE("synthetic DashKit journey replays from BLE notification to HUD") {
     CHECK_EQ(active.decoded_speed_frames, 1);
     CHECK_EQ(active.decoded_turn_signal_frames, 2);
     CHECK_EQ(active.decoded_driver_assistance_frames, 1);
-    CHECK_EQ(active.decoded_exterior_light_frames, 3);
     CHECK_EQ(active.decoded_gear_frames, 1);
     CHECK_EQ(active.decoded_speed_limit_frames, 1);
     check_active_frame(runtime.canvas);

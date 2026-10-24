@@ -33,10 +33,6 @@ struct TelemetryIngestResult {
     std::uint8_t decoded_speed_limit_frames{};
     std::uint8_t unavailable_speed_limit_frames{};
     std::uint8_t rejected_speed_limit_frames{};
-    std::uint8_t decoded_exterior_light_frames{};
-    std::uint8_t unavailable_exterior_light_fields{};
-    std::uint8_t faulted_exterior_light_fields{};
-    std::uint8_t rejected_exterior_light_frames{};
 
     [[nodiscard]] constexpr bool accepted_packet() const noexcept {
         return packet_error == protocol::PacketError::None;

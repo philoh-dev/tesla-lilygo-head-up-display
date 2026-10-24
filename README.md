@@ -13,6 +13,11 @@ Licensed under the [MIT License](LICENSE). Copyright (c) 2026 philoh-dev.
 
 Installed HUD in Park, photographed through the reflective combiner at night.
 
+![Default LILYGO true_hud layout](docs/images/dashboard-true-hud.png)
+
+The default `true_hud` canvas keeps the driving essentials in a compact layout.
+Select `road_scene` for the lane-and-vehicle visualization below.
+
 ![LILYGO road_scene: left signal and occupied blind spots](docs/images/dashboard-road-scene-simulator.png)
 
 Turn-signal arrows are [project-created vector assets](assets/icons/project/README.md)
@@ -87,7 +92,7 @@ CAN/protocol anti-corruption layer
 The domain and application layers contain no ESP-IDF, BLE, CAN, LVGL, or
 board-specific types. Those details remain in adapters behind explicit ports.
 
-Both dashboard layouts include an AMOLED pixel orbit: the content shifts by
+All dashboard layouts include an AMOLED pixel orbit: the content shifts by
 1–2 pixels within a ±2-pixel envelope every four minutes to distribute wear
 from static graphics. The same behavior runs in firmware and the simulator.
 
@@ -178,7 +183,7 @@ With SDL2 installed, launch the interactive 536 x 240 dashboard simulator:
 ./scripts/simulate.sh
 ```
 
-The minimal layout is compiled by default. Build the road-scene layout instead
+The `true_hud` layout is compiled by default. Build the road-scene layout instead
 with:
 
 ```sh
@@ -212,13 +217,31 @@ No global PATH changes or Visual Studio/NMake installation are required.
 Layout selection happens before compilation; the resulting simulator contains
 only the selected canvas implementation.
 
-### Minimal layout
+### True HUD layout
 
-![Tesla Head-Up Display dashboard simulator in direct-view mode](docs/images/dashboard-simulator.png)
+![LILYGO true_hud layout](docs/images/dashboard-true-hud.png)
 
-The minimal layout keeps vehicle speed at the center and places status symbols
-around it. A European-style speed-limit sign appears on the right whenever
-fresh `DAS_fusedSpeedLimit` telemetry is available.
+`true_hud` keeps a clear 35 px border around the display, including during
+pixel orbit. 100 px Inter Regular speed and its light-gray unit are horizontally centered
+as one group on a fixed baseline, so changing digits do not shift them vertically.
+Turn arrows occupy the top corners. The speed-limit sign sits directly above the ego-speed unit, with
+18 px digits leaving at least 3 px of white padding inside the ring. The battery icon and
+percentage are bottom-left, with 18 px text centered beside the 18 px-high
+icon; gear uses the same text size at bottom-right, replaced by connection status
+when needed.
+Inter uses tabular digits. Small blind-spot icons sit between each turn arrow
+and the battery/gear footer: white when occupied, red while signaling toward
+that side, and hidden when clear or stale.
+
+Launch a connected LILYGO preview on Windows:
+
+```powershell
+$env:TESLA_HEADUP_DASHBOARD_LAYOUT = "true_hud"
+.\scripts\simulate.ps1 --direct-view --preview-connected --preview-speed 130 --preview-speed-limit 130
+```
+
+For firmware, configure a fresh SDKCONFIG with
+`-DTESLA_HEADUP_DASHBOARD_LAYOUT=true_hud`. The `road_scene` layout remains available.
 
 ### Road-scene layout
 
@@ -294,7 +317,7 @@ Use `--preview-both-blind-spots` for both lanes, `--preview-speed 130` and
 the healthy battery footer. Use `--preview-regeneration` to capture the recuperation bar. In the interactive
 simulator, P cycles power use, recuperation, and zero power.
 
-The checked-in screenshots are synthetic direct-view captures, not photos of a
+The simulator screenshots are synthetic direct-view captures, not photos of a
 connected vehicle or evidence of validated CAN mappings. Refresh all road-scene
 README images from a built simulator with:
 
@@ -320,7 +343,7 @@ In Park, road lines disappear and the ego car switches to a front three-quarter 
 When the link/data stream is healthy, a battery icon and fresh energy-derived
 car charge replace the left connection text (`--preview-connected` shows a synthetic 51%).
 It is a native arrangement, not a stretched bitmap. Its origin is fixed at `(0,0)`.
-`minimal` retains the unscaled 536×240 viewport. Add `--rgb-viewport` to use that
+`true_hud` retains the unscaled 536×240 viewport. Add `--rgb-viewport` to use that
 movable viewport with either layout; `--origin-x 132 --origin-y 120` centers it.
 I/J/K/L move the viewport by one pixel; hold Shift for ten pixels.
 The window title shows the origin. Coordinates are **before mirroring**;
@@ -372,8 +395,7 @@ the reproducible configuration sources. Regenerate `sdkconfig` after changing
 those defaults instead of editing generated values by hand.
 
 Select **Tesla Head-Up Display RM67162 display → Dashboard layout** through
-`idf.py -C firmware menuconfig` before building. The default is **Minimal
-centered speed**; **Road scene** compiles the alternative lane-and-vehicle
+`idf.py -C firmware menuconfig` before building. The default is **True HUD**; **Road scene** compiles the alternative lane-and-vehicle
 composition. Only the selected layout source is linked into the firmware.
 
 Flash a connected board with:
@@ -382,9 +404,24 @@ Flash a connected board with:
 idf.py -C firmware flash monitor
 ```
 
-Windows users can build, flash, and monitor the **LilyGO H619** road-scene
-firmware or its display self-test with these repository-root scripts. Run from
-an ESP-IDF 5.4.4 command prompt; the COM port is optional:
+On Windows, build, size-check, flash and monitor the **LILYGO H619** with
+`true_hud` by default:
+
+```powershell
+.\scripts\flash.ps1 COM3
+```
+
+The shortcut `flash-true-hud.bat COM3` runs the same launcher. Omit the port for
+auto-detection. Use `-Layout road_scene` for the other canvas, `-Mode
+display_self_test` for the synthetic sequence, `-NoMonitor` to skip the serial
+monitor, `-BuildOnly` to compile and size-check without flashing, or `-DryRun`
+to inspect commands without accessing hardware. Builds and SDKCONFIG files are
+isolated by layout and firmware mode under `build-flash-h619-*`.
+ESP-IDF 5.4.4 is discovered and activated automatically; `-IdfPath` accepts a
+custom SDK path. See the [launcher options](docs/first-flash-and-recovery.md#windows-flash-launcher).
+
+The existing road-scene scripts remain available from an activated ESP-IDF
+command prompt:
 
 ```bat
 flash-firmware.bat COM3

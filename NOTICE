@@ -6,16 +6,15 @@ The MIT license in LICENSE covers original project code, documentation, and
 project-created artwork. Retain that copyright and license notice when
 redistributing copies or substantial portions of this work.
 
-Turn-signal arrows and both Autopilot variants are project-created artwork.
-The minimal-layout Autopilot image was generated with Codex; the road-scene
-variants are generated from project geometry.
+Turn-signal arrows, blind-spot icons and Autopilot badges are project-created
+artwork. The Autopilot variants are generated from project geometry.
 
 Third-party materials retain their own copyrights and license conditions;
 the project's MIT license does not relicense them:
 
 - Inter font sources and generated derivatives: SIL Open Font License 1.1;
   see assets/fonts/Inter-OFL.txt.
-- Montserrat font sources and generated derivatives: SIL Open Font License 1.1;
+- LVGL built-in Montserrat fallback font: SIL Open Font License 1.1;
   see assets/fonts/OFL.txt.
 - Externally supplied vehicle artwork retains the rights of its respective
   owners and is excluded from the project MIT license.

@@ -7,8 +7,8 @@ documented in the [DashKit integration guide](../../docs/dashkit-integration.md)
 
 | Fixture | Purpose |
 | --- | --- |
-| `active_drive` | Exercises speed, gear, turns, driver assistance, and retained diagnostic light decoding in one seven-frame notification. |
-| `calm_drive` | Replaces the active state with 42 km/h and clears all warnings, indicators, and diagnostic light observations. |
+| `active_drive` | Exercises speed, gear, turns and driver assistance in one five-frame notification. |
+| `calm_drive` | Replaces the active state with 42 km/h and clears all warnings and indicators. |
 | `late_old_speed` | Verifies that a later-delivered packet with an older local receipt time cannot regress telemetry. |
 | `truncated_active_drive()` | Verifies atomic rejection of a multi-frame notification with a truncated final frame. |
 
@@ -33,6 +33,13 @@ They cover both display sizes, left/right occupancy and signals, Autopilot
 priority, dim blink phases, and non-overlapping perspective dashes through
 Drive/Reverse animation cycles. The [README screenshots](../../docs/images/README.md)
 use the simulator's deterministic preview inputs; they are not packet captures.
+
+The default `true_hud` canvas has separate checks in
+[`lvgl_true_hud_dashboard_canvas_test.cpp`](../integration/lvgl_true_hud_dashboard_canvas_test.cpp),
+including centered speed/unit placement, stable vertical alignment, sign
+padding, footer sizing, and independent blind-spot warnings through blink phases.
+Exterior-light telemetry is not part of these fixtures or either canvas;
+supported turn-signal decoding remains in the shared pipeline.
 
 Run tooling checks from the repository root with:
 

@@ -115,7 +115,29 @@ TEST_CASE("telemetry ingestion captures only atomically valid packets") {
     CHECK(ingestor.ingest(
               tesla_headup::test::fixtures::active_drive, 1ms)
               .accepted_packet());
-    CHECK_EQ(sink.record_count, 7U);
+    CHECK_EQ(sink.record_count, 5U);
+}
+
+TEST_CASE("unsupported lamp frames remain raw diagnostics and do not update telemetry") {
+    RecordingDiagnosticSink sink;
+    tesla_headup::application::BoundedCanFrameCapture capture{sink};
+    tesla_headup::application::TelemetryStore telemetry;
+    tesla_headup::dashkit::DashKitTelemetryIngestor ingestor{telemetry, &capture};
+    for (const unsigned address : {1009U, 1001U, 627U}) {
+        std::array<std::uint8_t, 19> packet{1, 1, 0, 0, 0, 1,
+            static_cast<std::uint8_t>(address & 255U),
+            static_cast<std::uint8_t>(address >> 8U), 0, 0, 8,
+            255, 255, 255, 255, 255, 255, 255, 255};
+        const auto result = ingestor.ingest(packet, 1ms);
+        CHECK(result.accepted_packet());
+        CHECK_EQ(result.decoded_turn_signal_frames, 0);
+        CHECK_EQ(result.decoded_driver_assistance_frames, 0);
+        CHECK_EQ(telemetry.vehicle_speed(1ms).status,
+                 tesla_headup::application::SignalStatus::NeverReceived);
+        CHECK_EQ(telemetry.turn_signals(1ms).left_status,
+                 tesla_headup::application::SignalStatus::NeverReceived);
+    }
+    CHECK_EQ(sink.record_count, 3U);
 }
 
 }  // namespace

@@ -10,9 +10,9 @@ Settings are domain values and contain no ESP-IDF or NVS types:
 - enabled state for speed, selected gear, turn signals, Autopilot, and
   blind-spot warnings.
 
-The serialized exterior-light preference is retained only for compatibility
-with existing NVS records. No exterior-light feature is registered by the
-current firmware.
+The retired preference at bit 2 is accepted and ignored when reading existing
+NVS records. New records clear that bit; the remaining feature bits retain
+their original positions.
 
 Connection and stale-data status is safety-critical and is therefore always
 enabled rather than exposed as a configurable dashboard feature. Vehicle speed
@@ -28,7 +28,7 @@ shifter (its pull-up is 5 V; see [wiring](newhaven-wiring.md)). Mirroring is app
 final output, not per symbol. Newhaven placement is separate build configuration
 (`CONFIG_TESLA_HEADUP_RGB_ORIGIN_X/Y`) or an adapter API call, not persisted settings.
 Full-panel RGB road scene fixes origin to `(0,0)`; compact-origin preferences
-apply only when `CONFIG_TESLA_HEADUP_RGB_FULL_ROAD_SCENE` is disabled or minimal is selected.
+apply only when `CONFIG_TESLA_HEADUP_RGB_FULL_ROAD_SCENE` is disabled or `true_hud` is selected.
 
 ## Ports and application behavior
 

@@ -1,5 +1,9 @@
 # Project-created dashboard indicators
 
+Both supported canvases use the turn arrows. `true_hud` adds compact blind-spot
+icons; `road_scene` uses adjacent-vehicle sprites and an Autopilot badge. Neither
+canvas includes exterior-light indicators.
+
 These arrows are independently authored geometric vector assets for
 Tesla Head-Up Display. They use a conventional filled arrowhead and short
 rectangular shaft with softly rounded joins. No Tesla bitmap is read or embedded by their preparation code.
@@ -37,10 +41,21 @@ manual-sourced turn-arrow PNGs and legacy simulator bitmap have been removed.
 
 ## Autopilot artwork
 
-`autopilot.png` is the original Codex-generated minimal-layout source, as
-confirmed by the contributor. Its prepared variant remains 32 x 30. The compact
-38 x 36 and native 77 x 72 road-scene badges are produced by `native_autopilot()`
-from project geometry. All source and prepared indicators live in this folder;
-none are sourced from Tesla owner-manual bitmaps. Unused lighting artwork and
-its generated descriptors have been removed. These project-created assets are
+The compact 38 x 36 and native 77 x 72 road-scene badges are generated from
+project geometry by `native_autopilot()`. They are project-created artwork
 covered by the root license and attribution notice.
+
+## Blind-spot artwork
+
+`blind-spot-left.svg` and `blind-spot-right.svg` are 32 x 32 rear-view car
+outlines with two radar arcs on the occupied side. The right icon is an exact
+horizontal reflection of the left. White indicates occupancy; the matching
+`-warning.svg` variants use red `#FF453A` for occupancy with that turn signal
+active. Clear blind spots should hide the icon.
+
+Transparent antialiased 32 x 32 PNG exports are in `prepared/`. The `true_hud`
+canvas renders each icon between its turn arrow and battery/gear corner.
+The white images are stored in `true_hud_indicator_images.cpp`; LVGL recolors
+only the occupied side with active turn intent to warning red. Dark blink
+phases retain that warning. Clear or stale occupancy hides the icon. `generate_indicator_images.py` regenerates and
+checks the descriptors, and no runtime scaling is used.

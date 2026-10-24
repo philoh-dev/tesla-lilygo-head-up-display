@@ -4,6 +4,10 @@ These PNG sources and prepared sprites belong to the compile-time `road_scene`
 layout. The ego driving view is user-supplied; the adjacent vehicles are
 perspective edits of supplied artwork. Park uses separate generated artwork.
 
+The default `true_hud` canvas does not link these sprites. Its blind-spot
+warnings use the compact [project indicators](../icons/project/README.md).
+Choose `-Layout road_scene` in the Windows flash launcher to use these vehicles.
+
 ![Current LILYGO road scene](../../docs/images/dashboard-road-scene-simulator.png)
 
 ## States and orientation

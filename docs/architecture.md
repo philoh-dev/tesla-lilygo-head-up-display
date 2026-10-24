@@ -40,7 +40,6 @@ Implemented domain concepts include:
 - `VehicleSpeed`
 - `SelectedGear`
 - `TurnSignalState`
-- `ExteriorLightState`
 - `AutopilotState`
 - `BlindSpotOccupancy`
 - `SpeedLimit`
@@ -72,9 +71,8 @@ through the `DashboardCanvas` output port.
 
 `TelemetryStore` is the first application-side telemetry aggregate. It retains
 vehicle speed, independent left/right turn-lamp and blind-spot observations,
-the fused speed limit, battery electrical state and power limits, diagnostic
-exterior-light feedback, and the detailed
-Tesla Autopilot state with their
+the fused speed limit, battery electrical state and power limits, and the
+detailed Tesla Autopilot state with their
 DashKit source timestamps and local monotonic receipt times. Callers receive
 values only while they are fresh; never-received, stale, and explicitly
 unavailable states remain distinct. Updates older than the latest local receipt
@@ -100,16 +98,11 @@ as does the speed limit. This prevents jitter-driven hide/show transitions
 without delaying explicit inactive, fault, or unavailable observations.
 Blind-spot freshness remains independently configured at 500 ms.
 
-Exterior-light decoding and storage remain isolated for protocol diagnostics,
-but no exterior-light feature or presenter is registered in the active HUD.
-This keeps the provisional mappings available for captured-data validation
-without presenting unverified lamp state to the driver.
-
 Power utilization is derived only while both battery electrical state and
 available limits are fresh. Fixed-point domain arithmetic selects the
 directional limit, clamps utilization, and rejects unusable inputs. A power
 presenter updates the road-scene gauge through a semantic canvas primitive;
-the minimal layout omits it.
+the `true_hud` layout omits it.
 Measured voltage/current expires after 500 ms; the independent limit input has
 a bounded 1,500 ms delivery-tolerance deadline. Fresh current cannot revive an
 expired limit, and a retained limit cannot revive stale current.
@@ -120,7 +113,7 @@ usable-energy formula with floor rounding (rather than Vanilla's nearest
 rounding), with a five-second deadline per multiplexed input.
 The battery presenter updates an optional feature value without changing its
 enabled permission. The dashboard now has nine bounded feature slots; the
-native and compact road scenes render the battery, while minimal omits the visual.
+both layouts render a battery widget.
 
 ### Ports
 

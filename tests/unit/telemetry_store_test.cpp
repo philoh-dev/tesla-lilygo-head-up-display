@@ -12,11 +12,9 @@ using tesla_headup::application::SignalStatus;
 using tesla_headup::application::TelemetryFreshnessPolicy;
 using tesla_headup::application::TelemetryStore;
 using tesla_headup::application::BlindSpotSide;
-using tesla_headup::application::ExteriorLightSignal;
 using tesla_headup::application::TurnSignalLampSide;
 using tesla_headup::domain::AutopilotState;
 using tesla_headup::domain::BlindSpots;
-using tesla_headup::domain::HighBeamMode;
 using tesla_headup::domain::TurnSignals;
 using tesla_headup::domain::VehicleSpeed;
 
@@ -349,104 +347,6 @@ TEST_CASE("out-of-order Autopilot telemetry is rejected") {
         AutopilotState::Disabled, 1, 1999ms));
 
     CHECK(store.autopilot(2s).active());
-}
-
-TEST_CASE("exterior lights are off before observations arrive") {
-    const TelemetryStore store;
-
-    const auto snapshot = store.exterior_lights(1s);
-
-    CHECK_EQ(snapshot.current_value.high_beam_mode(), HighBeamMode::Off);
-    CHECK(!snapshot.current_value.position_lights_active());
-    CHECK_EQ(
-        snapshot.position_lights_status,
-        SignalStatus::NeverReceived);
-}
-
-TEST_CASE("fresh exterior lamp observations compose one domain value") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::PositionLights, true, 1, 100ms));
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::LowBeam, true, 2, 100ms));
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::FrontFog, true, 3, 100ms));
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::RearFog, true, 4, 100ms));
-
-    const auto lights = store.exterior_lights(100ms).current_value;
-    CHECK(lights.position_lights_active());
-    CHECK(lights.low_beam_active());
-    CHECK(lights.front_fog_active());
-    CHECK(lights.rear_fog_active());
-    CHECK_EQ(
-        store.exterior_lights(100ms)
-            .rear_fog_source_timestamp_microseconds,
-        4U);
-}
-
-TEST_CASE("adaptive setting classifies an active high beam exclusively") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::HighBeam, true, 1, 100ms));
-
-    CHECK_EQ(
-        store.exterior_lights(100ms).current_value.high_beam_mode(),
-        HighBeamMode::Manual);
-
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::AdaptiveHighBeamEnabled, true, 2, 101ms));
-    const auto lights = store.exterior_lights(101ms).current_value;
-    CHECK_EQ(lights.high_beam_mode(), HighBeamMode::Adaptive);
-    CHECK(!lights.high_beam_active());
-    CHECK(lights.adaptive_high_beam_active());
-}
-
-TEST_CASE("adaptive setting alone does not illuminate a high beam") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::AdaptiveHighBeamEnabled, true, 1, 100ms));
-
-    CHECK_EQ(
-        store.exterior_lights(100ms).current_value.high_beam_mode(),
-        HighBeamMode::Off);
-}
-
-TEST_CASE("exterior lamp freshness is tracked independently") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::LowBeam, true, 1, 0ms));
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::RearFog, true, 2, 400ms));
-
-    const auto snapshot = store.exterior_lights(501ms);
-    CHECK_EQ(snapshot.low_beam_status, SignalStatus::Stale);
-    CHECK_EQ(snapshot.rear_fog_status, SignalStatus::Fresh);
-    CHECK(!snapshot.current_value.low_beam_active());
-    CHECK(snapshot.current_value.rear_fog_active());
-}
-
-TEST_CASE("unavailable exterior lamp data fails dark") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::FrontFog, true, 1, 100ms));
-    CHECK(store.mark_exterior_light_unavailable(
-        ExteriorLightSignal::FrontFog, 2, 101ms));
-
-    const auto snapshot = store.exterior_lights(101ms);
-    CHECK_EQ(snapshot.front_fog_status, SignalStatus::Unavailable);
-    CHECK(!snapshot.current_value.front_fog_active());
-}
-
-TEST_CASE("out-of-order exterior light observations are rejected") {
-    TelemetryStore store;
-    CHECK(store.update_exterior_light(
-        ExteriorLightSignal::PositionLights, true, 2, 2s));
-
-    CHECK(!store.update_exterior_light(
-        ExteriorLightSignal::PositionLights, false, 1, 1999ms));
-
-    CHECK(store.exterior_lights(2s).current_value.position_lights_active());
 }
 
 static_assert(noexcept(

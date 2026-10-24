@@ -41,7 +41,11 @@ class Indicator:
 INDICATORS = (
     Indicator("turn-left.png", "turn_left_image", 32, 30, PROJECT_ICON_DIRECTORY),
     Indicator("turn-right.png", "turn_right_image", 32, 30, PROJECT_ICON_DIRECTORY),
-    Indicator("autopilot.png", "autopilot_image", 32, 30),
+)
+
+TRUE_HUD_INDICATORS = (
+    Indicator("blind-spot-left.png", "hud_blind_spot_left_image", 32, 32),
+    Indicator("blind-spot-right.png", "hud_blind_spot_right_image", 32, 32),
 )
 
 ROAD_SCENE_INDICATORS = (
@@ -225,6 +229,8 @@ def main() -> int:
     arguments = parser.parse_args()
     generated_outputs = (
         (COMMON_OUTPUT_FILE, generate_source(INDICATORS)),
+        (COMMON_OUTPUT_FILE.with_name("true_hud_indicator_images.cpp"),
+         generate_source(TRUE_HUD_INDICATORS)),
         (
             ROAD_SCENE_OUTPUT_FILE,
             generate_source(ROAD_SCENE_INDICATORS, compact_park=True),

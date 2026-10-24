@@ -14,7 +14,7 @@ struct SettingsRecord {
     std::uint8_t units{0};
     std::uint8_t projection_mirrored{1};
     std::uint8_t brightness_percent{100};
-    std::uint8_t enabled_feature_bits{0x3F};
+    std::uint8_t enabled_feature_bits{0x3B};
 
     friend constexpr bool operator==(
         const SettingsRecord&,

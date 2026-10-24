@@ -47,10 +47,12 @@ def main():
     medium = prepare(500, 'Medium', 14)
     semibold = prepare(600, 'SemiBold', 14)
     fonts = [(regular,64,'tesla_headup_inter_regular_64','0x30-0x39'),
+             (regular,100,'tesla_headup_inter_regular_100','0x30-0x39'),
              (regular,110,'tesla_headup_inter_regular_110','0x30-0x39'),
              (medium,16,'tesla_headup_inter_medium_16','0x20-0x7e'),
              (medium,18,'tesla_headup_inter_medium_18','0x20-0x7e'),
              (medium,24,'tesla_headup_inter_medium_24','0x20-0x7e'),
+             (semibold,18,'tesla_headup_inter_semibold_18','0x30-0x39'),
              (semibold,24,'tesla_headup_inter_semibold_24','0x20-0x7e'),
              (semibold,40,'tesla_headup_inter_semibold_40','0x30-0x39,0x41,0x4d,0x58')]
     for source,size,symbol,chars in fonts:

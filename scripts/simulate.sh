@@ -10,7 +10,7 @@ case "$(uname -s)" in
         ;;
 esac
 build_directory="${project_root}/build-simulator"
-dashboard_layout="${TESLA_HEADUP_DASHBOARD_LAYOUT:-minimal}"
+dashboard_layout="${TESLA_HEADUP_DASHBOARD_LAYOUT:-true_hud}"
 
 cmake \
     -S "${project_root}" \

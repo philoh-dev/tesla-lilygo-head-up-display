@@ -8,7 +8,6 @@ namespace tesla_headup::application {
 enum class FeatureId : std::uint8_t {
     VehicleSpeed,
     TurnSignals,
-    ExteriorLights,
     Autopilot,
     BlindSpotWarnings,
     SystemStatus,
@@ -35,18 +34,11 @@ enum class Anchor : std::uint8_t {
 enum class Symbol : std::uint8_t {
     LeftArrow,
     RightArrow,
-    PositionLights,
-    LowBeam,
-    HighBeam,
-    AdaptiveHighBeam,
-    FrontFogLight,
-    RearFogLight,
     Autopilot,
 };
 
 enum class SymbolRole : std::uint8_t {
     TurnSignal,
-    ExteriorLight,
     Autopilot,
 };
 
@@ -107,7 +99,7 @@ public:
     virtual void draw_edge_gradient(const EdgeGradientElement& element) = 0;
     // Layouts without a power rail may omit this presentation primitive.
     virtual void draw_power(const PowerBarElement&) {}
-    // Compact/minimal layouts deliberately omit the native battery widget.
+    // Canvases implement their own battery widget or omit the primitive.
     virtual void draw_battery(const BatteryChargeElement&) {}
     virtual void end_frame() = 0;
 };

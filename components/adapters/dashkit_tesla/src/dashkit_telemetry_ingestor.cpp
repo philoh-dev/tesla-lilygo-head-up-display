@@ -2,7 +2,6 @@
 
 #include "tesla_headup/adapters/tesla_decoder/tesla_driver_assistance_decoder.hpp"
 #include "tesla_headup/adapters/tesla_decoder/tesla_battery_charge_decoder.hpp"
-#include "tesla_headup/adapters/tesla_decoder/tesla_exterior_lights_decoder.hpp"
 #include "tesla_headup/adapters/tesla_decoder/tesla_gear_decoder.hpp"
 #include "tesla_headup/adapters/tesla_decoder/tesla_power_decoder.hpp"
 #include "tesla_headup/adapters/tesla_decoder/tesla_speed_decoder.hpp"
@@ -234,113 +233,6 @@ void ingest_driver_assistance(
     }
 }
 
-bool ingest_exterior_lamp(
-    IngestContext& context,
-    application::ExteriorLightSignal signal,
-    const tesla::ExteriorLampDecodeValue& decoded,
-    std::uint32_t source_timestamp_microseconds) noexcept {
-    if (decoded.validity == tesla::ExteriorLampValidity::Valid) {
-        return context.telemetry.update_exterior_light(
-            signal,
-            decoded.active,
-            source_timestamp_microseconds,
-            context.received_at);
-    }
-
-    const bool updated = context.telemetry.mark_exterior_light_unavailable(
-        signal,
-        source_timestamp_microseconds,
-        context.received_at);
-    if (updated && decoded.validity == tesla::ExteriorLampValidity::Fault) {
-        ++context.result.faulted_exterior_light_fields;
-    } else if (updated) {
-        ++context.result.unavailable_exterior_light_fields;
-    }
-    return updated;
-}
-
-void ingest_exterior_lights(
-    IngestContext& context,
-    const protocol::CanFrameView& frame) noexcept {
-    const auto decoded = tesla::decode_exterior_lights(frame);
-    bool updated = false;
-    switch (decoded.status) {
-    case tesla::ExteriorLightDecodeStatus::Ignored:
-        return;
-    case tesla::ExteriorLightDecodeStatus::InvalidFrame:
-        ++context.result.rejected_exterior_light_frames;
-        return;
-    case tesla::ExteriorLightDecodeStatus::FrontLighting:
-        updated = ingest_exterior_lamp(
-            context,
-            application::ExteriorLightSignal::PositionLights,
-            decoded.position_lights,
-            decoded.source_timestamp_microseconds);
-        updated = ingest_exterior_lamp(
-                      context,
-                      application::ExteriorLightSignal::LowBeam,
-                      decoded.low_beam,
-                      decoded.source_timestamp_microseconds) ||
-                  updated;
-        updated = ingest_exterior_lamp(
-                      context,
-                      application::ExteriorLightSignal::HighBeam,
-                      decoded.high_beam,
-                      decoded.source_timestamp_microseconds) ||
-                  updated;
-        updated = ingest_exterior_lamp(
-                      context,
-                      application::ExteriorLightSignal::FrontFog,
-                      decoded.front_fog,
-                      decoded.source_timestamp_microseconds) ||
-                  updated;
-        break;
-    case tesla::ExteriorLightDecodeStatus::FrontLightingRequests:
-        updated = ingest_exterior_lamp(
-            context,
-            application::ExteriorLightSignal::PositionLights,
-            decoded.position_lights,
-            decoded.source_timestamp_microseconds);
-        updated = ingest_exterior_lamp(
-                      context,
-                      application::ExteriorLightSignal::LowBeam,
-                      decoded.low_beam,
-                      decoded.source_timestamp_microseconds) ||
-                  updated;
-        updated = ingest_exterior_lamp(
-                      context,
-                      application::ExteriorLightSignal::HighBeam,
-                      decoded.high_beam,
-                      decoded.source_timestamp_microseconds) ||
-                  updated;
-        break;
-    case tesla::ExteriorLightDecodeStatus::RearLighting:
-        updated = ingest_exterior_lamp(
-            context,
-            application::ExteriorLightSignal::RearFog,
-            decoded.rear_fog,
-            decoded.source_timestamp_microseconds);
-        break;
-    case tesla::ExteriorLightDecodeStatus::LightingControls:
-        updated = ingest_exterior_lamp(
-            context,
-            application::ExteriorLightSignal::FrontFogSwitch,
-            decoded.front_fog,
-            decoded.source_timestamp_microseconds);
-        updated = context.telemetry.update_exterior_light(
-                      application::ExteriorLightSignal::AdaptiveHighBeamEnabled,
-                      decoded.adaptive_high_beam_enabled,
-                      decoded.source_timestamp_microseconds,
-                      context.received_at) ||
-                  updated;
-        break;
-    }
-
-    if (updated) {
-        ++context.result.decoded_exterior_light_frames;
-    }
-}
-
 void ingest_power(
     IngestContext& context,
     const protocol::CanFrameView& frame) noexcept {
@@ -394,7 +286,6 @@ void ingest_frame(
     ingest_gear(context, frame);
     ingest_turn_signal(context, frame);
     ingest_driver_assistance(context, frame);
-    ingest_exterior_lights(context, frame);
     ingest_power(context, frame);
     const auto battery = tesla::decode_battery_charge(frame);
     bool battery_updated = false;

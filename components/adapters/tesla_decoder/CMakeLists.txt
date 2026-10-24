@@ -3,7 +3,6 @@ if(COMMAND idf_component_register)
         SRCS
             "src/tesla_battery_charge_decoder.cpp"
             "src/tesla_driver_assistance_decoder.cpp"
-            "src/tesla_exterior_lights_decoder.cpp"
             "src/tesla_gear_decoder.cpp"
             "src/tesla_power_decoder.cpp"
             "src/tesla_speed_decoder.cpp"
@@ -22,7 +21,6 @@ else()
     add_library(tesla_headup_tesla_decoder
         src/tesla_battery_charge_decoder.cpp
         src/tesla_driver_assistance_decoder.cpp
-        src/tesla_exterior_lights_decoder.cpp
         src/tesla_gear_decoder.cpp
         src/tesla_power_decoder.cpp
         src/tesla_speed_decoder.cpp

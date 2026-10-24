@@ -8,7 +8,7 @@ peripheral. The default H619 retains the RM67162 adapter below. Both reuse
 the compile-time-selected canvas, fonts and assets in `lvgl_rm67162`.
 
 LVGL renders **800×480 native-endian RGB565** for the full-panel road scene,
-or **536×240** for minimal/compact mode, into a retained logical image
+or **536×240** for `true_hud`/compact mode, into a retained logical image
 through one 40-line partial buffer. Unlike RM67162, this path must not swap
 pixel bytes. The composer clears a full **800×480** framebuffer to black and
 copies the unscaled dashboard at `(0,0)` for full-panel mode, or configurable
@@ -21,14 +21,13 @@ status containers. The footer owns gear/connection labels and a dedicated
 Autopilot image; rendering never reparents widgets or creates these objects.
 Driving graphics are clipped above the footer. Pixel orbit and final output
 mirroring apply to both regions together. The compact road scene has the same
-structure with 536×192 driving and 536×48 footer containers. Minimal retains
-its existing composition.
+structure with 536×204 driving and 536×36 footer containers. `true_hud` uses
+its own compact speed-and-status composition.
 
 Both road-scene sizes use a battery widget with persistent LVGL rectangles and a label in the
 left footer: grey outline/terminal, dark empty area, green percentage fill and
-grey percentage text. The semantic `draw_battery` primitive is a deliberate
-no-op in minimal mode. No bitmap, image generation or runtime
-scaling is needed for this widget.
+grey percentage text. `true_hud` uses the same widget style with a taller body. No bitmap, image
+generation or runtime scaling is needed for this widget.
 Connection/data status text occupies the same left slot and takes precedence
 unless the link is Ready with fresh telemetry; selected gear is on the right.
 
@@ -138,7 +137,7 @@ initialization and reuses them for every frame. Dashboard symbols select
 pre-sized `RGB565A8` descriptors, preserving their source colors and smooth
 alpha without runtime decoding, scaling, or widget allocation.
 
-The adapter has separate minimal and road-scene canvas sources. ESP-IDF's
+The adapter has separate true-HUD and road-scene canvas sources. ESP-IDF's
 dashboard-layout Kconfig choice compiles exactly one of them. The road-scene
 variant additionally creates persistent lane lines, a power/recuperation rail
 with one retained fill object, one ego
@@ -216,13 +215,6 @@ driving GPIO 38 high.
   production LVGL dashboard. QSPI framing, active-low reset, active-high power,
   536 x 240 landscape orientation, RGB order, and production pixel submission
   are therefore confirmed on the selected board.
-- The minimal layout uses a generated 110 px Montserrat Light digit subset;
-  the compact road-scene layout links a separate 64 px subset. Native Newhaven
-  road scene uses 110 px Montserrat Light speed and 40 px Bold speed-limit digits.
-  Only the selected
-  layout's speed font is compiled. The smaller unit label still uses LVGL's
-  built-in Montserrat font. Final optical sizing and mirror direction still
-  require validation through the installed C1 combiner or windshield.
 - The self-test has exercised 100% brightness. The complete 1–100% command
   range, persistence across power cycles, tearing-effect synchronization,
   sleep, long-term pixel-orbit effectiveness, and sustained performance remain

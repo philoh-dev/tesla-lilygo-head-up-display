@@ -58,9 +58,6 @@ TEST_CASE("dashboard settings map onto every registered configurable feature") {
     settings.units = tesla_headup::domain::UnitSystem::Imperial;
     settings.enabled_features.vehicle_speed = false;
     settings.enabled_features.turn_signals = false;
-    // This legacy persisted preference must not require an exterior-light
-    // feature to be registered.
-    settings.enabled_features.exterior_lights = false;
     settings.enabled_features.autopilot = false;
     settings.enabled_features.blind_spot_warnings = false;
     settings.enabled_features.selected_gear = false;

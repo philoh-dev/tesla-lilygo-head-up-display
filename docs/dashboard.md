@@ -23,8 +23,7 @@ Live charge is rounded down to whole percentages: for example, 60.99% displays
 as 60%. The underlying usable-energy calculation and freshness rules are unchanged.
 The native Autopilot badge is clean geometric artwork with a flat blue disk,
 a centered white wheel with curved bridge/swept lower spokes and smooth edges, prepared offline at its
-final size. The compact road scene uses the same artwork prepared at 38×36;
-the minimal layout retains its Codex-generated project icon.
+final size. The compact road scene uses the same artwork prepared at 38×36.
 The current speed starts beside the top of the power/recuperation rail
 at y=24; the unit follows the speed. The native rail has no horizontal marker.
 The road boundaries share a common vanishing point and equal lane widths
@@ -34,7 +33,7 @@ markings per lane. Its road scene follows the same structure: a 536×204 driving
 region and 536×36 footer. Speed starts at (24,12), beside the top of the rail;
 the 62 px limit sign sits top-right with a 12 px inset. The rail has no horizontal
 marker. Connection/battery is left, Autopilot centered and gear right in the footer.
-`minimal` and the optional compact
+`true_hud` and the optional compact
 RGB road scene retain an unscaled 536×240 viewport. Mirroring belongs to the RGB adapter; see the
 [board guide](devkitc-n32r16v.md). The SDL simulator supports both transports:
 its default LilyGO mode and the Newhaven mode selected with `--rgb`.
@@ -61,8 +60,9 @@ flicker during normal delivery jitter. A received inactive, fault, or unavailabl
 state still clears the active presentation immediately; this window only
 tolerates gaps between valid observations. Silence beyond 1.5 seconds clears it.
 
-A system-status feature occupies the top area in `minimal` and the left
-footer in both road-scene sizes, without moving the driving indicators.
+A system-status feature occupies the left footer in both road-scene sizes,
+without moving the driving indicators.
+In `true_hud`, status appears bottom-right and takes precedence over gear.
 It distinguishes connecting and waiting-for-data information,
 amber reconnecting or stale-data warnings, and red disconnected, pairing, or
 terminal connection failures. Once the BLE link is ready, the message remains
@@ -70,8 +70,8 @@ terminal connection failures. Once the BLE link is ready, the message remains
 `NO DATA` when valid telemetry has not arrived for more than 500 ms. Malformed
 packets never refresh that timer.
 
-The selected-gear feature shows `P`, `R`, `N`, or `D` at the top-right edge
-in `minimal`, or the right footer in either road-scene size. It is
+The selected-gear feature shows `P`, `R`, `N`, or `D` in the right footer
+of either layout. It is
 visible only while the decoded gear observation is fresh.
 
 The turn-signal feature presents green left and right arrows around the speed.
@@ -92,8 +92,8 @@ ego vehicle. The vehicle changes to red while the turn signal toward its lane
 is active, including the lamp's dark blink phase, to highlight a blocked lane
 change. Left and right occupancy are independent, so both lanes can warn at the
 same time. The feature emits a semantic side warning; its concrete vehicle asset
-and lane-relative placement remain display-adapter concerns. The minimal layout
-deliberately does not render blind-spot vehicles.
+and lane-relative placement remain display-adapter concerns. `true_hud` uses
+small radar/car icons instead of full vehicle sprites.
 
 The dashboard core does not depend on LVGL, ESP-IDF, or the RM67162 driver. It
 emits presentation-ready text elements through `DashboardCanvas`, an output
@@ -106,7 +106,7 @@ from the center for positive battery power; a green (`#5CBD68`) fill grows
 downward for negative power. Each half spans 0–100% of its corresponding
 available BMS limit. Values are clamped, and zero, stale, missing, or unavailable
 power produces no fill. The neutral track remains visible without a center marker.
-The minimal layout omits this gauge.
+The `true_hud` layout omits this gauge.
 
 `PowerIndicator` receives a typed, signed utilization through `PowerPresenter`.
 Electrical state and power limits must both be fresh within 500 ms. Either
@@ -115,8 +115,18 @@ scheduler. The calculation uses fixed-point arithmetic without allocation.
 
 Two LVGL layouts implement the same `DashboardCanvas` contract:
 
-- `minimal` retains the centered speed composition and existing indicator
-  positions;
+- `true_hud` provides 100 px Inter speed with a light-gray unit centered as one
+  group at the top on a fixed digit baseline, top-corner turn signals and a speed-limit sign
+  centered above the unit (18 px digits with at least 3 px white radial padding),
+  battery icon and
+  percentage at bottom-left and gear/connection status at bottom-right. Footer
+  text is 18 px and vertically centered on the 18 px-high battery icon. A
+  35 px clear border is maintained throughout pixel orbit. Connection status
+  takes precedence over gear; absent or stale values are cleared each frame.
+  A 32 px blind-spot radar/car icon sits between each turn arrow and its footer
+  corner. Occupied sides are white; signaling toward an occupied side turns
+  that icon red, including during the dark blink phase. Clear or stale sides
+  hide independently. Vehicle, road, Autopilot and power graphics are omitted;
 - `road_scene` places speed beside a fixed rail and adds perspective lane
   segments plus a centered vehicle viewed from behind at an elevated angle.
   Turn signals flank the road. Both sizes put the speed limit at the top-right and gear, Autopilot and
@@ -154,8 +164,8 @@ the normal lane color returns on the first frame after disengagement.
 The layout is a build choice, not a persisted runtime setting. ESP-IDF selects
 one source through **Tesla Head-Up Display RM67162 display → Dashboard layout** in `menuconfig`.
 Both the firmware and simulator also accept
-`-DTESLA_HEADUP_DASHBOARD_LAYOUT=minimal` or
-`-DTESLA_HEADUP_DASHBOARD_LAYOUT=road_scene` during configuration. The unselected
+`-DTESLA_HEADUP_DASHBOARD_LAYOUT=road_scene`, or
+`-DTESLA_HEADUP_DASHBOARD_LAYOUT=true_hud` during configuration. The unselected
 canvas source and its layout-specific assets are not compiled or linked.
 
 ## Modular composition
@@ -230,7 +240,7 @@ TESLA_HEADUP_DASHBOARD_LAYOUT=road_scene ./scripts/simulate.sh \
 ```
 
 `--rgb` uses native 800×480 LVGL for `road_scene`; placement is fixed to `(0,0)`.
-Add `--rgb-viewport` for the original movable 536×240 composition. `minimal`
+Add `--rgb-viewport` for the original movable 536×240 composition. `true_hud`
 always uses the compact viewport, default `(132,0)`.
 Both use native RGB565, one 40-line partial buffer and the firmware's shared
 `RgbFrame::update` / `RgbFrame::compose` functions. No bitmap stretching occurs.
@@ -303,10 +313,8 @@ panel controller.
 The simulator and hardware use the same pre-sized `RGB565A8` indicator images.
 The shared LVGL canvas keeps a fixed pool of persistent image widgets and
 reassigns their descriptor pointers each frame, avoiding runtime scaling and
-object churn. Exterior-light indicators are not registered in the active
-dashboard. Their unused artwork and LVGL descriptors have been removed, and
-both renderers ignore lighting-symbol requests. Provisional light decoding
-remains isolated for future validation against captured vehicle data.
+object churn. Unsupported exterior-light telemetry, presentation types and
+decoders are omitted.
 
 ### Lower chase-camera road scene
 

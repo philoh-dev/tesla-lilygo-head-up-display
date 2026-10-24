@@ -61,7 +61,7 @@ constexpr bool projection_mirrored_by_default = false;
 #if CONFIG_TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE
 constexpr char dashboard_layout[] = "road_scene";
 #else
-constexpr char dashboard_layout[] = "minimal";
+constexpr char dashboard_layout[] = "true_hud";
 #endif
 
 std::uint32_t lvgl_milliseconds() {

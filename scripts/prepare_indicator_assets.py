@@ -2,7 +2,6 @@
 
 """Prepare project-created dashboard indicator assets."""
 
-from dataclasses import dataclass
 from pathlib import Path
 import math
 import xml.etree.ElementTree as ET
@@ -14,22 +13,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project"
 OUTPUT_DIRECTORY = SOURCE_DIRECTORY / "prepared"
 PROJECT_ICON_DIRECTORY = PROJECT_ROOT / "assets" / "icons" / "project"
-
-
-@dataclass(frozen=True)
-class Indicator:
-    source: str
-    output: str
-    width: int
-    height: int
-    center_bias_right: bool = False
-    color: tuple[int, int, int] | None = None
-
-
-INDICATORS = (
-    Indicator("autopilot.png", "autopilot.png", 32, 30),
-
-)
 
 
 def native_autopilot(output_size=(77, 72)) -> Image.Image:
@@ -125,45 +108,12 @@ def project_turn_arrow(right: bool = False) -> Image.Image:
     return ImageOps.mirror(image) if right else image
 
 
-def prepare(indicator: Indicator) -> None:
-    with Image.open(SOURCE_DIRECTORY / indicator.source) as source:
-        rgba = source.convert("RGBA")
-
-    visible_bounds = rgba.getchannel("A").getbbox()
-    if visible_bounds is None:
-        raise ValueError(f"{indicator.source} has no visible pixels")
-
-    artwork = rgba.crop(visible_bounds)
-    artwork.thumbnail((indicator.width, indicator.height), Image.Resampling.LANCZOS)
-
-    canvas = Image.new("RGBA", (indicator.width, indicator.height), (0, 0, 0, 0))
-    horizontal_padding = indicator.width - artwork.width
-    horizontal_offset = horizontal_padding // 2
-    if indicator.center_bias_right:
-        horizontal_offset = horizontal_padding - horizontal_offset
-
-    offset = (horizontal_offset, (indicator.height - artwork.height) // 2)
-    canvas.alpha_composite(artwork, offset)
-    if indicator.color is not None:
-        opacity = canvas.getchannel("A")
-        canvas = Image.new("RGBA", canvas.size, (*indicator.color, 0))
-        canvas.putalpha(opacity)
-
-    canvas.save(
-        OUTPUT_DIRECTORY / indicator.output,
-        format="PNG",
-        optimize=True,
-    )
-
-
 def main() -> None:
     OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
     project_output = PROJECT_ICON_DIRECTORY / "prepared"
     project_output.mkdir(parents=True, exist_ok=True)
     for right, filename in ((False, "turn-left.png"), (True, "turn-right.png")):
         project_turn_arrow(right).save(project_output / filename, optimize=True)
-    for indicator in INDICATORS:
-        prepare(indicator)
     native_autopilot().save(OUTPUT_DIRECTORY / "autopilot-road-scene-wide.png",
                            format="PNG", optimize=True)
     native_autopilot((38, 36)).save(OUTPUT_DIRECTORY / "autopilot-road-scene.png",

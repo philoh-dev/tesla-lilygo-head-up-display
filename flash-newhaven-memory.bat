@@ -13,7 +13,7 @@ if errorlevel 1 goto firmware_missing
 
 echo Building and flashing DevKitC N32R16V memory-only bring-up...
 echo Leave the display disconnected. A dark screen is expected. BLE is disabled.
-call idf.py -B build-newhaven-memory %PORT_OPTION% -DIDF_TARGET=esp32s3 -DTESLA_HEADUP_BOARD_PROFILE=devkitc_n32r16v -DSDKCONFIG=sdkconfig.devkitc_n32r16v.memory -DTESLA_HEADUP_DASHBOARD_LAYOUT=minimal -DTESLA_HEADUP_FIRMWARE_MODE=board_bring_up build flash monitor
+call idf.py -B build-newhaven-memory %PORT_OPTION% -DIDF_TARGET=esp32s3 -DTESLA_HEADUP_BOARD_PROFILE=devkitc_n32r16v -DSDKCONFIG=sdkconfig.devkitc_n32r16v.memory -DTESLA_HEADUP_DASHBOARD_LAYOUT=true_hud -DTESLA_HEADUP_FIRMWARE_MODE=board_bring_up build flash monitor
 set "RESULT=%ERRORLEVEL%"
 
 popd

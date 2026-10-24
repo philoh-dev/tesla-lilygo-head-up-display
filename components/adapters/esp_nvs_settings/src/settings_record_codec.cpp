@@ -5,13 +5,14 @@ namespace {
 
 constexpr std::uint8_t vehicle_speed_bit = 1U << 0U;
 constexpr std::uint8_t turn_signals_bit = 1U << 1U;
-constexpr std::uint8_t exterior_lights_bit = 1U << 2U;
+// Accept and ignore the retired v2 preference without renumbering other bits.
+constexpr std::uint8_t reserved_legacy_bit = 1U << 2U;
 constexpr std::uint8_t autopilot_bit = 1U << 3U;
 constexpr std::uint8_t blind_spot_bit = 1U << 4U;
 constexpr std::uint8_t selected_gear_bit = 1U << 5U;
 constexpr std::uint8_t known_feature_bits = vehicle_speed_bit |
                                              turn_signals_bit |
-                                             exterior_lights_bit |
+                                             reserved_legacy_bit |
                                              autopilot_bit |
                                              blind_spot_bit |
                                              selected_gear_bit;
@@ -22,8 +23,6 @@ SettingsRecord encode_settings(const domain::Settings& settings) noexcept {
     std::uint8_t features = 0;
     features |= settings.enabled_features.vehicle_speed ? vehicle_speed_bit : 0;
     features |= settings.enabled_features.turn_signals ? turn_signals_bit : 0;
-    features |=
-        settings.enabled_features.exterior_lights ? exterior_lights_bit : 0;
     features |= settings.enabled_features.autopilot ? autopilot_bit : 0;
     features |=
         settings.enabled_features.blind_spot_warnings ? blind_spot_bit : 0;
@@ -60,8 +59,6 @@ std::optional<domain::Settings> decode_settings(
                 (record.enabled_feature_bits & vehicle_speed_bit) != 0,
             .turn_signals =
                 (record.enabled_feature_bits & turn_signals_bit) != 0,
-            .exterior_lights =
-                (record.enabled_feature_bits & exterior_lights_bit) != 0,
             .autopilot =
                 (record.enabled_feature_bits & autopilot_bit) != 0,
             .blind_spot_warnings =

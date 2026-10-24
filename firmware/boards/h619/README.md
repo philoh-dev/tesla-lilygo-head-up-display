@@ -14,7 +14,17 @@ production QSPI rendering path have been verified on the selected physical
 H619 board. This does not declare other LILYGO revisions compatible; each new
 revision still requires its own profile and hardware validation.
 
-## Current road-scene layout
+## Default true_hud layout
+
+![LILYGO H619 true_hud simulator capture](../../../docs/images/dashboard-true-hud.png)
+
+The default canvas centers speed and unit together on a stable baseline. The
+speed-limit sign sits above the unit, turn arrows occupy the top corners, and
+battery/gear text sits along the bottom. Blind-spot icons are white for occupancy
+and red while signaling toward that side. Inter tabular digits and a 35 px
+clear border are shared with the simulator.
+
+## Optional road-scene layout
 
 ![LILYGO H619 direct-view simulator capture](../../../docs/images/dashboard-road-scene-simulator.png)
 
@@ -27,8 +37,20 @@ hardware photograph.
 
 ## Build and flash
 
-Activate ESP-IDF 5.4.4 first. From the repository root, the Windows scripts
-select H619 and `road_scene` explicitly:
+The default Windows launcher builds and flashes `true_hud`:
+
+```powershell
+.\scripts\flash.ps1 COM3
+```
+
+It activates ESP-IDF 5.4.4 and checks the binary size before flashing. Add
+`-Layout road_scene` or `-Mode display_self_test` as needed. Use `-NoMonitor`
+to release the port after uploading, `-BuildOnly` for compilation and the size
+check, or `-DryRun` to inspect commands. Each layout/mode has an isolated build
+and SDKCONFIG. `flash-true-hud.bat COM3` is the equivalent shortcut.
+
+The legacy scripts select H619 and `road_scene` explicitly; activate ESP-IDF
+5.4.4 before running them from the repository root:
 
 ```bat
 flash-firmware.bat COM3
@@ -45,7 +67,7 @@ idf.py -B build-h619-road-scene -p COM3 flash monitor
 Replace `COM3` with the connected port. Projection mirroring is enabled by
 default for the reflective HUD; use `--direct-view` in the simulator to see the
 image as viewed after reflection. The generic CMake layout default remains
-`minimal`, so specify `road_scene` when configuring manually.
+`true_hud`, so specify `road_scene` when configuring manually.
 
 Generated SDKCONFIG and build directories are local artifacts. Checked-in
 board/layout defaults are the reproducible source. See [first flash and recovery](../../../docs/first-flash-and-recovery.md)

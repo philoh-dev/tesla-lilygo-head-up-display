@@ -36,8 +36,8 @@ if (-not (Test-Path (Join-Path $sdlDirectory 'cmake/sdl2-config.cmake'))) {
     Expand-Archive -LiteralPath $archive -DestinationPath $dependencyDirectory -Force
 }
 
-$layout = if ($env:TESLA_HEADUP_DASHBOARD_LAYOUT) { $env:TESLA_HEADUP_DASHBOARD_LAYOUT } else { 'minimal' }
-if ($layout -notin @('minimal', 'road_scene')) { throw "Unknown layout: $layout" }
+$layout = if ($env:TESLA_HEADUP_DASHBOARD_LAYOUT) { $env:TESLA_HEADUP_DASHBOARD_LAYOUT } else { 'true_hud' }
+if ($layout -notin @('true_hud', 'road_scene')) { throw "Unknown layout: $layout" }
 $env:ZIG_GLOBAL_CACHE_DIR = Join-Path $cacheDirectory 'zig-global'
 $env:ZIG_LOCAL_CACHE_DIR = Join-Path $cacheDirectory 'zig-local'
 $config = @('-S', $projectRoot, '-B', $buildDirectory, '-G', 'Ninja',

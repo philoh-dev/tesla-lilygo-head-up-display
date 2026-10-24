@@ -7,7 +7,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = {
-    "flash-newhaven-memory.bat": ("board_bring_up", "minimal", "memory", "memory"),
+    "flash-newhaven-memory.bat": ("board_bring_up", "true_hud", "memory", "memory"),
     "flash-newhaven-self-test.bat": ("display_self_test", "road_scene", "self-test", "self-test"),
     "flash-newhaven-firmware.bat": ("normal", "road_scene", "normal", "normal"),
 }

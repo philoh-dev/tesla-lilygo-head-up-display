@@ -4,7 +4,6 @@ set(HUD_RUNTIME_SOURCES
     "src/dashboard_render_scheduler.cpp"
     "src/dashboard_settings_applier.cpp"
     "src/display_self_test_source.cpp"
-    "src/exterior_light_presenter.cpp"
     "src/selected_gear_presenter.cpp"
     "src/speed_limit_presenter.cpp"
     "src/system_status_presenter.cpp"

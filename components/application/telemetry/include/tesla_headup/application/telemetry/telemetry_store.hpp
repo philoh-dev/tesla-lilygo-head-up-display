@@ -3,7 +3,6 @@
 #include "tesla_headup/domain/autopilot_state.hpp"
 #include "tesla_headup/domain/battery_charge.hpp"
 #include "tesla_headup/domain/blind_spots.hpp"
-#include "tesla_headup/domain/exterior_lights.hpp"
 #include "tesla_headup/domain/selected_gear.hpp"
 #include "tesla_headup/domain/power_flow.hpp"
 #include "tesla_headup/domain/speed_limit.hpp"
@@ -25,7 +24,6 @@ struct TelemetryFreshnessPolicy {
     std::chrono::milliseconds blind_spot_timeout{500};
     // DAS_status has a 500 ms cycle; tolerate BLE jitter and missed updates.
     std::chrono::milliseconds autopilot_timeout{1'500};
-    std::chrono::milliseconds exterior_light_timeout{500};
     std::chrono::milliseconds selected_gear_timeout{500};
     // DAS_status itself is sent every 500 ms; allow delivery jitter/missed cycles.
     std::chrono::milliseconds speed_limit_timeout{1'500};
@@ -95,32 +93,6 @@ struct AutopilotTelemetry {
     [[nodiscard]] constexpr bool active() const noexcept {
         return fresh() && domain::autopilot_active(*current_value);
     }
-};
-
-enum class ExteriorLightSignal : std::uint8_t {
-    PositionLights,
-    LowBeam,
-    HighBeam,
-    FrontFog,
-    FrontFogSwitch,
-    RearFog,
-    AdaptiveHighBeamEnabled,
-};
-
-struct ExteriorLightTelemetry {
-    domain::ExteriorLights current_value{domain::ExteriorLights::off()};
-    SignalStatus position_lights_status{SignalStatus::NeverReceived};
-    SignalStatus low_beam_status{SignalStatus::NeverReceived};
-    SignalStatus high_beam_status{SignalStatus::NeverReceived};
-    SignalStatus front_fog_status{SignalStatus::NeverReceived};
-    SignalStatus rear_fog_status{SignalStatus::NeverReceived};
-    SignalStatus adaptive_high_beam_status{SignalStatus::NeverReceived};
-    std::uint32_t position_lights_source_timestamp_microseconds{};
-    std::uint32_t low_beam_source_timestamp_microseconds{};
-    std::uint32_t high_beam_source_timestamp_microseconds{};
-    std::uint32_t front_fog_source_timestamp_microseconds{};
-    std::uint32_t rear_fog_source_timestamp_microseconds{};
-    std::uint32_t adaptive_high_beam_source_timestamp_microseconds{};
 };
 
 struct SelectedGearTelemetry {
@@ -222,20 +194,6 @@ public:
     [[nodiscard]] AutopilotTelemetry autopilot(
         TelemetryTime now) const noexcept;
 
-    [[nodiscard]] bool update_exterior_light(
-        ExteriorLightSignal signal,
-        bool active,
-        std::uint32_t source_timestamp_microseconds,
-        TelemetryTime received_at) noexcept;
-
-    [[nodiscard]] bool mark_exterior_light_unavailable(
-        ExteriorLightSignal signal,
-        std::uint32_t source_timestamp_microseconds,
-        TelemetryTime received_at) noexcept;
-
-    [[nodiscard]] ExteriorLightTelemetry exterior_lights(
-        TelemetryTime now) const noexcept;
-
     [[nodiscard]] bool update_selected_gear(
         domain::SelectedGear gear,
         std::uint32_t source_timestamp_microseconds,
@@ -305,10 +263,6 @@ private:
         BlindSpotSide side) noexcept;
     [[nodiscard]] const BooleanSignalSlot& blind_spot_slot(
         BlindSpotSide side) const noexcept;
-    [[nodiscard]] BooleanSignalSlot& exterior_light_slot(
-        ExteriorLightSignal signal) noexcept;
-    [[nodiscard]] const BooleanSignalSlot& exterior_light_slot(
-        ExteriorLightSignal signal) const noexcept;
     [[nodiscard]] static SignalStatus status_at(
         SignalStatus status,
         TelemetryTime received_at,
@@ -328,13 +282,6 @@ private:
     std::uint32_t autopilot_source_timestamp_{};
     TelemetryTime autopilot_received_at_{};
     SignalStatus autopilot_status_{SignalStatus::NeverReceived};
-    BooleanSignalSlot position_lights_{};
-    BooleanSignalSlot low_beam_{};
-    BooleanSignalSlot high_beam_{};
-    BooleanSignalSlot front_fog_{};
-    BooleanSignalSlot front_fog_switch_{};
-    BooleanSignalSlot rear_fog_{};
-    BooleanSignalSlot adaptive_high_beam_enabled_{};
     std::optional<domain::SelectedGear> selected_gear_{};
     std::uint32_t selected_gear_source_timestamp_{};
     TelemetryTime selected_gear_received_at_{};

@@ -63,11 +63,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: minimal
+          - name: true_hud
             board: h619
-            layout: minimal
+            layout: true_hud
             mode: normal
-            sdkconfig: sdkconfig.minimal
+            sdkconfig: sdkconfig.true_hud
           - name: road_scene
             board: h619
             layout: road_scene
@@ -80,34 +80,34 @@ jobs:
             sdkconfig: sdkconfig.display_self_test
           - name: devkitc_n32r16v
             board: devkitc_n32r16v
-            layout: minimal
+            layout: true_hud
             mode: board_bring_up
             sdkconfig: sdkconfig.devkitc_n32r16v
-          - name: rgb_minimal
+          - name: rgb_true_hud
             board: devkitc_n32r16v
-            layout: minimal
+            layout: true_hud
             mode: normal
-            sdkconfig: sdkconfig.devkitc_n32r16v.minimal
+            sdkconfig: sdkconfig.devkitc_n32r16v.true_hud
           - name: rgb_road_scene
             board: devkitc_n32r16v
             layout: road_scene
             mode: normal
             sdkconfig: sdkconfig.devkitc_n32r16v.road_scene
-          - name: rgb_self_test_minimal
+          - name: rgb_self_test_true_hud
             board: devkitc_n32r16v
-            layout: minimal
+            layout: true_hud
             mode: display_self_test
-            sdkconfig: sdkconfig.devkitc_n32r16v.self_test_minimal
+            sdkconfig: sdkconfig.devkitc_n32r16v.self_test_true_hud
           - name: rgb_self_test_road_scene
             board: devkitc_n32r16v
             layout: road_scene
             mode: display_self_test
             sdkconfig: sdkconfig.devkitc_n32r16v.self_test_road_scene
-          - name: rgb_diagnostics_minimal
+          - name: rgb_diagnostics_true_hud
             board: devkitc_n32r16v
-            layout: minimal
+            layout: true_hud
             mode: rgb_diagnostics
-            sdkconfig: sdkconfig.devkitc_n32r16v.diagnostics_minimal
+            sdkconfig: sdkconfig.devkitc_n32r16v.diagnostics_true_hud
           - name: rgb_diagnostics_road_scene
             board: devkitc_n32r16v
             layout: road_scene
@@ -148,8 +148,8 @@ jobs:
       fail-fast: false
       matrix:
         layout:
-          - minimal
           - road_scene
+          - true_hud
 
     steps:
       - name: Check out repository

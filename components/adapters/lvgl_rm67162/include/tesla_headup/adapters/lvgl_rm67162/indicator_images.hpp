@@ -6,7 +6,8 @@ namespace tesla_headup::platform::assets {
 
 extern const lv_image_dsc_t turn_left_image;
 extern const lv_image_dsc_t turn_right_image;
-extern const lv_image_dsc_t autopilot_image;
+extern const lv_image_dsc_t hud_blind_spot_left_image;
+extern const lv_image_dsc_t hud_blind_spot_right_image;
 extern const lv_image_dsc_t blind_spot_left_image;
 extern const lv_image_dsc_t blind_spot_right_image;
 extern const lv_image_dsc_t blind_spot_left_grey_image;

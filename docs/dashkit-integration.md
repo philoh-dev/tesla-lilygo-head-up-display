@@ -184,35 +184,6 @@ BLE delivery jitter. The three-cycle window tolerates jitter and missed
 updates; explicit `UNKNOWN_SNA`/`NONE` still hides the sign immediately. Speed
 and blind-spot freshness deadlines are unchanged.
 
-Exterior-light decoding supports both the legacy vehicle DBC and the Juniper
-DBC selected by DashKit firmware commit `91492e2`. The mappings remain
-provisional until target-car captures confirm their presentation semantics:
-
-These signals are retained for diagnostics and decoder tests, but the current
-firmware does not register an exterior-light dashboard feature or presenter.
-
-| DashKit bus | Address | Signal use |
-| --- | ---: | --- |
-| 1 | 1009 (`VCFRONT_lighting`) | paired parking, low-beam, high-beam, and front-fog physical status |
-| 1 | 1001 (`DAS_bodyControls`) | Juniper tail/position, low-beam, and high-beam requests forwarded by DashKit |
-| 1 | 995 (`VCRIGHT_lightStatus`) | rear-fog physical status |
-| 1 | 627 (`UI_vehicleControl`) | Juniper front-fog switch and `UI_autoHighBeamEnabled` classification setting |
-
-Legacy physical lamp fields have the DBC states OFF, ON, fault, and unavailable.
-Paired front lamps are combined into one dashboard indicator and fail dark if
-either side reports fault or unavailable. Juniper's four-byte and the legacy
-two-byte `VCRIGHT_lightStatus` variants are both accepted, as is trailing
-adapter padding; truncated frames remain rejected. DashKit's Juniper hardware
-allowlist does not forward `VCFRONT_lighting`, so the HUD derives position,
-low-beam, and high-beam state from `DAS_bodyControls` and front fog from the UI
-switch that the firmware does forward.
-
-An observed high beam is classified as adaptive only while the
-automatic-high-beam setting is fresh and enabled; otherwise it is shown as
-manual. Physical front-fog feedback takes precedence on legacy vehicles, with
-the Juniper UI switch used as a fallback. These classifications remain
-explicit assumptions until verified against target-car captures.
-
 `DashKitTelemetryIngestor` connects each valid notification batch to the Tesla
 decoders and `TelemetryStore`. `VehicleSpeedPresenter` exposes only fresh speed
 to the dashboard, and `SelectedGearPresenter` applies the same freshness gate
@@ -222,8 +193,8 @@ phase from cancellation. `BlindSpotPresenter` and `AutopilotPresenter` apply
 fresh driver-assistance state. A newly illuminated opposite turn lamp clears
 the previous dark side's retained intent, preventing a false hazard blink
 during direction changes. `SpeedLimitPresenter` applies the same freshness
-gate to the fused speed limit. Exterior-light observations remain in telemetry
-for diagnostics but are not presented. All active presenters feed a shared
+gate to the fused speed limit. Unsupported exterior-light decoding and storage
+are omitted; turn-lamp feedback remains supported. All active presenters feed a shared
 dirty-frame scheduler, which
 coalesces changes and limits dashboard rendering to one frame per 40 ms by
 default. The firmware entry point composes this complete path; BLE callbacks

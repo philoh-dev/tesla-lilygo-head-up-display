@@ -8,6 +8,10 @@ See the [current dashboard guide](../dashboard.md) and [screenshot catalog](../i
 for the latest visual behavior. Typography, lane-warning colors, dash spacing,
 and artwork refinements are maintained there without rewriting accepted ADRs.
 
+The supported canvases are `true_hud` (default) and `road_scene`. Their current
+selection, flashing workflow and asset ownership are documented in the
+[project README](../../README.md). The legacy canvas is no longer a build option.
+
 ## Status values
 
 - **Proposed:** under evaluation; implementation may explore it.

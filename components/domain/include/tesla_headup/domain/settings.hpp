@@ -43,7 +43,6 @@ private:
 struct EnabledDashboardFeatures {
     bool vehicle_speed{true};
     bool turn_signals{true};
-    bool exterior_lights{true};
     bool autopilot{true};
     bool blind_spot_warnings{true};
     bool selected_gear{true};

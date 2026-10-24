@@ -4,16 +4,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/cmake/board_profile.cmake")
 
 set(
     TESLA_HEADUP_DASHBOARD_LAYOUT
-    "minimal"
+    "true_hud"
     CACHE STRING
-    "Dashboard layout compiled into the firmware (minimal or road_scene)"
+    "Dashboard layout compiled into the firmware (true_hud or road_scene)"
 )
 set_property(
     CACHE TESLA_HEADUP_DASHBOARD_LAYOUT
-    PROPERTY STRINGS minimal road_scene
+    PROPERTY STRINGS true_hud road_scene
 )
-if(NOT TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "minimal" AND
-   NOT TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "road_scene")
+if(NOT TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "road_scene" AND
+   NOT TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "true_hud")
     message(
         FATAL_ERROR
         "Unknown TESLA_HEADUP_DASHBOARD_LAYOUT: ${TESLA_HEADUP_DASHBOARD_LAYOUT}"

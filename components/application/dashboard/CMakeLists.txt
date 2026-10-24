@@ -2,7 +2,6 @@ set(DASHBOARD_SOURCES
     "src/blind_spot_warnings.cpp"
     "src/centered_vehicle_speed.cpp"
     "src/dashboard.cpp"
-    "src/exterior_light_indicators.cpp"
     "src/selected_gear_indicator.cpp"
     "src/speed_limit_indicator.cpp"
     "src/system_status_indicator.cpp"

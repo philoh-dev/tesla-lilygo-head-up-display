@@ -2,13 +2,12 @@ menu "Tesla Head-Up Display RM67162 display"
 
     choice TESLA_HEADUP_DASHBOARD_LAYOUT
         prompt "Dashboard layout"
-        default TESLA_HEADUP_DASHBOARD_LAYOUT_MINIMAL
-
-        config TESLA_HEADUP_DASHBOARD_LAYOUT_MINIMAL
-            bool "Minimal centered speed"
+        default TESLA_HEADUP_DASHBOARD_LAYOUT_TRUE_HUD
 
         config TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE
             bool "Road scene"
+        config TESLA_HEADUP_DASHBOARD_LAYOUT_TRUE_HUD
+            bool "True HUD: speed, limit, signals and battery"
     endchoice
 
     config TESLA_HEADUP_DISPLAY_SPI_CLOCK_HZ

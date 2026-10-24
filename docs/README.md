@@ -7,7 +7,19 @@ The official source is [tesla-lilygo-head-up-display](https://github.com/philoh-
 with the release baseline on `main`. Start with the [project README](../README.md)
 for cloning, simulation, and flashing.
 
-![Current LILYGO road-scene preview](images/dashboard-road-scene-simulator.png)
+![Default LILYGO true_hud preview](images/dashboard-true-hud.png)
+
+`true_hud` is the default canvas: centered speed and unit, speed limit above
+the unit, corner turn arrows, compact blind-spot warnings, and battery and
+gear/connection text along the bottom. Inter tabular digits and a 35 px clear
+border remain stable during pixel orbit.
+
+On Windows, `scripts/flash.ps1 COM3` builds, size-checks, flashes and monitors
+the H619 using the installed ESP-IDF environment. Use `-Layout road_scene` for
+the other canvas or `-BuildOnly` to validate without uploading. Each layout/mode
+has an isolated build and SDKCONFIG; see the first-flash guide for all options.
+
+![LILYGO road-scene preview](images/dashboard-road-scene-simulator.png)
 
 The current `road_scene` has Inter tabular typography, an 85/15 driving/footer
 split, speed-proportional perspective dashes, and mirrored adjacent vehicles.
@@ -22,9 +34,9 @@ Outer gray boundaries follow occupancy independently on each side.
 | [Product vision](product-vision.md) | Goals, scope, users, and constraints |
 | [Architecture](architecture.md) | Domains, ports, adapters, and runtime flow |
 | [Dashboard](dashboard.md) | Modular features and rendering contract |
-| [Screenshot catalog](images/README.md) | Current synthetic road-scene states and image regeneration |
+| [Screenshot catalog](images/README.md) | Both layouts, synthetic states and image regeneration |
 | [Fonts](../assets/fonts/README.md) | Inter weights, tabular figures, licenses and generation |
-| [Turn indicators](../assets/icons/project/README.md) | Project-created SVG arrows and final-size raster preparation |
+| [Dashboard indicators](../assets/icons/project/README.md) | Project-created turn, blind-spot and Autopilot artwork |
 | [Vehicles](../assets/vehicles/README.md) | Source artwork, mirrored color states and fixed presentation sizes |
 | [Settings](settings.md) | Persistent preferences, ports, and adapters |
 | [First flash and recovery](first-flash-and-recovery.md) | H619 build, flash, diagnostics, pairing, and reset procedures |

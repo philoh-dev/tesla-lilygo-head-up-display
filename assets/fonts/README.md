@@ -1,10 +1,19 @@
 # Dashboard fonts
 
-The `road_scene` layout uses Inter 4.1 with tabular figures. Fonts are rasterized
-at their final sizes and linked only into that layout; the minimal layout
-retains its existing Montserrat assets.
+The `road_scene` and `true_hud` layouts use Inter 4.1 with tabular figures. Fonts are rasterized
+at their final sizes and linked only into the selected layout.
 
 ![Inter typography in the LILYGO road scene](../../docs/images/dashboard-road-scene-simulator.png)
+
+The table below describes `road_scene`. `true_hud` uses 100 px Regular speed,
+18 px Medium units/status/battery/gear, and 18 px SemiBold limit
+digits on the LILYGO display.
+
+In `true_hud`, speed and unit form one horizontally centered group with a
+4 px label gap. A fixed digit envelope prevents vertical movement as speed
+changes. Battery and gear text fit the 18 px-high battery icon; speed-limit
+digits retain at least 3 px of white padding inside the sign. The RGB preview
+uses the same unscaled viewport.
 
 | Role | Weight | LILYGO 536 x 240 | Native RGB 800 x 480 |
 | --- | --- | ---: | ---: |
@@ -25,9 +34,10 @@ but a separate cruise-speed/MAX readout is not exposed by the telemetry model.
   `Inter-Variable.ttf`, with upstream revision
   `66647c0bbbe41a850d79d9c76fb13add3378940f` recorded in the font metadata.
 - [Inter-OFL.txt](Inter-OFL.txt): SIL Open Font License and copyright notice.
+- [OFL.txt](OFL.txt): retained license for LVGL's built-in Montserrat fallback;
+  dashboard labels use Inter.
 - `Inter-Regular.ttf`, `Inter-Medium.ttf`, and `Inter-SemiBold.ttf`: generated
   static instances. Regular uses optical size 32; Medium/SemiBold use 14.
-- The Montserrat sources and [OFL.txt](OFL.txt) remain for the minimal layout.
 
 ## Regeneration
 
@@ -49,6 +59,3 @@ To reuse an installed converter or select Node explicitly:
 ```sh
 python3 scripts/generate_inter_fonts.py --converter path/to/lv_font_conv.js --node path/to/node
 ```
-
-[`generate_speed_font.sh`](../../scripts/generate_speed_font.sh) regenerates
-the legacy Montserrat assets; it does not replace the Inter generator.

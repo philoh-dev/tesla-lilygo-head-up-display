@@ -19,9 +19,16 @@ if(CONFIG_TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE)
         set(DASHBOARD_SPEED_FONT_SOURCE "assets/tesla_headup_inter_regular_110.c" "assets/tesla_headup_inter_semibold_40.c")
     endif()
 else()
-    set(DASHBOARD_LAYOUT_SOURCE "src/lvgl_dashboard_canvas.cpp")
-    set(DASHBOARD_LAYOUT_ASSET_SOURCE "")
-    set(DASHBOARD_SPEED_FONT_SOURCE "assets/tesla_headup_speed_font_110.c")
+    # ESP-IDF's early component-requirements pass runs before Kconfig is loaded.
+    # Both canvases have the same dependencies; the configured pass selects
+    # road_scene above or the default true_hud sources here.
+    set(DASHBOARD_LAYOUT_SOURCE "src/lvgl_true_hud_dashboard_canvas.cpp")
+    set(DASHBOARD_LAYOUT_ASSET_SOURCE
+        "assets/true_hud_indicator_images.cpp"
+        "assets/tesla_headup_inter_medium_18.c"
+        "assets/tesla_headup_inter_medium_24.c"
+        "assets/tesla_headup_inter_semibold_18.c")
+    set(DASHBOARD_SPEED_FONT_SOURCE "assets/tesla_headup_inter_regular_100.c")
 endif()
 
 set(DISPLAY_TRANSPORT_SOURCE "src/rm67162_display.cpp")

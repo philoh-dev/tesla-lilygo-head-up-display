@@ -77,7 +77,7 @@ From the repository root in an ESP-IDF 5.4.4 environment:
 ```sh
 idf.py -C firmware -B build-newhaven-diagnostics \
   -DIDF_TARGET=esp32s3 -DTESLA_HEADUP_BOARD_PROFILE=devkitc_n32r16v \
-  -DTESLA_HEADUP_FIRMWARE_MODE=rgb_diagnostics -DTESLA_HEADUP_DASHBOARD_LAYOUT=minimal \
+  -DTESLA_HEADUP_FIRMWARE_MODE=rgb_diagnostics -DTESLA_HEADUP_DASHBOARD_LAYOUT=true_hud \
   -DSDKCONFIG=sdkconfig.devkitc_n32r16v.diagnostics build
 ```
 

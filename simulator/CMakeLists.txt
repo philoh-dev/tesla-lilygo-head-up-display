@@ -51,17 +51,20 @@ if(TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "road_scene")
         ../components/adapters/lvgl_rm67162/src/prepared_image_storage.cpp
     )
     set(TESLA_HEADUP_DASHBOARD_LAYOUT_DEFINITION TESLA_HEADUP_DASHBOARD_LAYOUT_ROAD_SCENE=1)
+elseif(TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "true_hud")
+    set(TESLA_HEADUP_DASHBOARD_LAYOUT_ASSET_SOURCE
+        ../components/adapters/lvgl_rm67162/assets/true_hud_indicator_images.cpp)
+    set(TESLA_HEADUP_DASHBOARD_CANVAS_SOURCE
+        ../components/adapters/lvgl_rm67162/src/lvgl_true_hud_dashboard_canvas.cpp)
+    set(TESLA_HEADUP_DASHBOARD_SPEED_FONT_SOURCE
+        ../components/adapters/lvgl_rm67162/assets/tesla_headup_inter_regular_100.c)
+    set(TESLA_HEADUP_DASHBOARD_TEXT_FONT_SOURCE
+        ../components/adapters/lvgl_rm67162/assets/tesla_headup_inter_medium_18.c
+        ../components/adapters/lvgl_rm67162/assets/tesla_headup_inter_medium_24.c
+        ../components/adapters/lvgl_rm67162/assets/tesla_headup_inter_semibold_18.c)
+    set(TESLA_HEADUP_DASHBOARD_LAYOUT_DEFINITION TESLA_HEADUP_DASHBOARD_LAYOUT_TRUE_HUD=1)
 else()
-    set(
-        TESLA_HEADUP_DASHBOARD_CANVAS_SOURCE
-        ../components/adapters/lvgl_rm67162/src/lvgl_dashboard_canvas.cpp
-    )
-    set(
-        TESLA_HEADUP_DASHBOARD_SPEED_FONT_SOURCE
-        ../components/adapters/lvgl_rm67162/assets/tesla_headup_speed_font_110.c
-    )
-    set(TESLA_HEADUP_DASHBOARD_LAYOUT_ASSET_SOURCE "")
-    set(TESLA_HEADUP_DASHBOARD_LAYOUT_DEFINITION TESLA_HEADUP_DASHBOARD_LAYOUT_MINIMAL=1)
+    message(FATAL_ERROR "Unsupported dashboard layout: ${TESLA_HEADUP_DASHBOARD_LAYOUT}")
 endif()
 
 add_library(tesla_headup_lvgl_dashboard_canvas
@@ -107,8 +110,12 @@ if(WIN32 AND TARGET SDL2::SDL2)
 endif()
 
 if(TESLA_HEADUP_BUILD_TESTS)
+    set(TESLA_HEADUP_CANVAS_TEST_SOURCE ../tests/integration/lvgl_dashboard_canvas_test.cpp)
+    if(TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "true_hud")
+        set(TESLA_HEADUP_CANVAS_TEST_SOURCE ../tests/integration/lvgl_true_hud_dashboard_canvas_test.cpp)
+    endif()
     add_executable(tesla_headup_lvgl_dashboard_canvas_tests
-        ../tests/integration/lvgl_dashboard_canvas_test.cpp
+        ${TESLA_HEADUP_CANVAS_TEST_SOURCE}
         ../tests/test_main.cpp
     )
     if(TESLA_HEADUP_DASHBOARD_LAYOUT STREQUAL "road_scene")

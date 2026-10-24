@@ -14,8 +14,6 @@ add_executable(tesla_headup_tests
     unit/dashkit_packet_parser_test.cpp
     unit/dashkit_status_mapper_test.cpp
     unit/driver_assistance_pipeline_test.cpp
-    unit/exterior_lights_test.cpp
-    unit/exterior_light_pipeline_test.cpp
     unit/gear_pipeline_test.cpp
     unit/power_pipeline_test.cpp
     unit/settings_test.cpp
@@ -23,7 +21,6 @@ add_executable(tesla_headup_tests
     unit/speed_limit_pipeline_test.cpp
     unit/system_status_test.cpp
     unit/tesla_driver_assistance_decoder_test.cpp
-    unit/tesla_exterior_lights_decoder_test.cpp
     unit/tesla_gear_decoder_test.cpp
     unit/tesla_speed_decoder_test.cpp
     unit/tesla_turn_signal_decoder_test.cpp

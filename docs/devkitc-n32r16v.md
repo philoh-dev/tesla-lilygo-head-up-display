@@ -98,7 +98,7 @@ flash-newhaven-firmware.bat COM3
 
 | Script | Mode | Generated configuration / build directory under `firmware` |
 | --- | --- | --- |
-| `flash-newhaven-memory.bat` | Memory only; no BLE/display; minimal layout selector | `sdkconfig.devkitc_n32r16v.memory` / `build-newhaven-memory` |
+| `flash-newhaven-memory.bat` | Memory only; no BLE/display; true_hud layout selector | `sdkconfig.devkitc_n32r16v.memory` / `build-newhaven-memory` |
 | `flash-newhaven-self-test.bat` | Road-scene RGB self-test; no BLE | `sdkconfig.devkitc_n32r16v.self-test` / `build-newhaven-self-test` |
 | `flash-newhaven-firmware.bat` | Normal road-scene RGB + DashKit BLE | `sdkconfig.devkitc_n32r16v.normal` / `build-newhaven-normal` |
 
@@ -148,8 +148,8 @@ idf.py -C firmware -B build-newhaven-normal \
   -DSDKCONFIG=sdkconfig.devkitc_n32r16v.normal build
 ```
 
-On Windows, enter each command on one line without backslashes. For minimal,
-select `-DTESLA_HEADUP_DASHBOARD_LAYOUT=minimal` with a fresh build/config pair. Exactly
+On Windows, enter each command on one line without backslashes. For `true_hud`,
+select `-DTESLA_HEADUP_DASHBOARD_LAYOUT=true_hud` with a fresh build/config pair. Exactly
 one layout and transport are selected. Replace `build` with `-p COM3 flash monitor`
 only after wiring/power review: the new panel has not been physically verified.
 
