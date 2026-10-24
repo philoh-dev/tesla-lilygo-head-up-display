@@ -13,6 +13,7 @@
 #include <vector>
 #include <cstdint>
 #include <string_view>
+#include <cstdio>
 
 namespace {
 
@@ -124,6 +125,51 @@ TEST_CASE("Inter digits are tabular across all dashboard fonts") {
             CHECK_EQ(glyph.adv_w,first.adv_w);
         }
     }
+}
+
+TEST_CASE("LILYGO road scene retains bounded LVGL memory during sustained animation") {
+    using namespace tesla_headup::application;
+    LvglSession session;
+    PixelCapture<536, 240> capture;
+    auto* display = session.display();
+    lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
+    lv_display_set_user_data(display, &capture);
+    lv_display_set_flush_cb(display, PixelCapture<536, 240>::flush);
+    lv_display_set_buffers(display, capture.draw_buffer.data(), nullptr,
+                          sizeof(capture.draw_buffer), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    tesla_headup::platform::LvglDashboardCanvas canvas;
+    CHECK(canvas.initialize(*display));
+    const auto objects = lv_obj_get_child_count(dashboard_content(display));
+    lv_mem_monitor_t warm{}, final{};
+    std::size_t minimum_free = SIZE_MAX;
+    for (unsigned frame = 0; frame < 400; ++frame) {
+        canvas.begin_frame();
+        canvas.draw_text({.text=frame % 2 ? "130" : "42", .role=TextRole::PrimaryValue});
+        canvas.draw_text({.text="km/h", .role=TextRole::Unit});
+        canvas.draw_text({.text=frame % 8 ? "D" : "P", .role=TextRole::Gear});
+        canvas.draw_text({.text=frame % 2 ? "130" : "50", .role=TextRole::SpeedLimit});
+        canvas.draw_battery({.percent=51});
+        canvas.draw_power({static_cast<std::int16_t>(frame % 2 ? 500 : -500)});
+        canvas.draw_edge_gradient({.edge=DisplayEdge::Left});
+        canvas.draw_edge_gradient({.edge=DisplayEdge::Right});
+        if (frame % 4) canvas.draw_symbol({.symbol=Symbol::LeftArrow});
+        if (frame % 3) canvas.draw_symbol({.symbol=Symbol::RightArrow});
+        canvas.draw_symbol({.symbol=Symbol::Autopilot, .role=SymbolRole::Autopilot});
+        canvas.end_frame();
+        lv_tick_inc(40);
+        (void)lv_timer_handler();
+        lv_refr_now(display);
+        CHECK_EQ(lv_obj_get_child_count(dashboard_content(display)), objects);
+        CHECK_EQ(lv_mem_test(), LV_RESULT_OK);
+        lv_mem_monitor(&final);
+        minimum_free = std::min(minimum_free, final.free_size);
+        if (frame == 39) warm = final; // Same final state as frame 399.
+    }
+    CHECK_EQ(final.free_size, warm.free_size);
+    CHECK_EQ(final.free_biggest_size, warm.free_biggest_size);
+    CHECK(minimum_free > 4096U);
+    std::printf("Road-scene LVGL memory: minimum_free=%zu final_free=%zu largest=%zu\n",
+                minimum_free, final.free_size, final.free_biggest_size);
 }
 
 
@@ -1045,6 +1091,7 @@ TEST_CASE("native road scene enlarges vehicles retains twelve straight lane segm
     CHECK_EQ(lv_obj_get_child_count(footer), footer_children);
     canvas.begin_frame();
     CHECK(lv_obj_has_flag(autopilot, LV_OBJ_FLAG_HIDDEN));
+    canvas.end_frame();
     CHECK_EQ(lv_image_get_src(left), &tesla_headup::platform::assets::blind_spot_left_grey_wide_image);
 }
 

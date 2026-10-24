@@ -49,7 +49,6 @@ private:
     void* spi_device_{nullptr};
     lv_display_t* lvgl_display_{nullptr};
     void* draw_buffer_a_{nullptr};
-    void* draw_buffer_b_{nullptr};
     LvglDashboardCanvas canvas_{};
     bool projection_mirrored_{false};
     bool projection_configured_{false};

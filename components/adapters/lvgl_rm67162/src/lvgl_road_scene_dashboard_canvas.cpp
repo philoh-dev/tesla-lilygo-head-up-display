@@ -52,7 +52,9 @@ constexpr std::int32_t driving_height = 408; // 85% of the native 480 px panel.
 constexpr std::int32_t status_height = 72;
 constexpr std::int32_t compact_driving_height = 204;
 constexpr std::int32_t compact_status_height = 36;
-constexpr std::uint32_t animation_period_ms = 16;
+// Match the 30 Hz LVGL refresh budget instead of rebuilding geometry at 60 Hz.
+// Motion remains distance/time based, including when frames run late.
+constexpr std::uint32_t animation_period_ms = 33;
 constexpr std::uint32_t lane_cycle_units = 43'200;
 constexpr std::size_t lane_rows_per_side = 4;
 constexpr std::uint32_t complete_road_cycle_units =
@@ -350,6 +352,10 @@ void hide(lv_obj_t* object) {
 
 void show(lv_obj_t& object) {
     lv_obj_remove_flag(&object, LV_OBJ_FLAG_HIDDEN);
+}
+
+void set_image_source(lv_obj_t* image, const lv_image_dsc_t* source) {
+    if (lv_image_get_src(image) != source) lv_image_set_src(image, source);
 }
 
 lv_obj_t* create_box(
@@ -745,12 +751,6 @@ void LvglDashboardCanvas::begin_frame() {
     for (lv_obj_t* object : blind_spot_vehicle_slots_) {
         hide(object);
     }
-    lv_image_set_src(
-        blind_spot_vehicle_slots_[0],
-        &vehicle_image(wide_road_scene_, 0, false));
-    lv_image_set_src(
-        blind_spot_vehicle_slots_[1],
-        &vehicle_image(wide_road_scene_, 1, false));
     hide(speed_limit_sign_);
 }
 
@@ -869,12 +869,12 @@ void LvglDashboardCanvas::draw_symbol(
     if (element.role == application::SymbolRole::TurnSignal) {
         if (element.symbol == application::Symbol::LeftArrow) {
             turn_signal_active_[0] = true;
-            lv_image_set_src(
+            set_image_source(
                 blind_spot_vehicle_slots_[0],
                 &vehicle_image(wide_road_scene_, 0, true));
         } else if (element.symbol == application::Symbol::RightArrow) {
             turn_signal_active_[1] = true;
-            lv_image_set_src(
+            set_image_source(
                 blind_spot_vehicle_slots_[1],
                 &vehicle_image(wide_road_scene_, 1, true));
         }
@@ -890,7 +890,7 @@ void LvglDashboardCanvas::draw_symbol(
     }
 
     lv_obj_t& image = footer_icon ? *status_autopilot_ : *image_slots_[next_image_slot_++];
-    lv_image_set_src(&image, descriptor);
+    set_image_source(&image, descriptor);
     lv_obj_set_style_image_opa(
         &image,
         element.role == application::SymbolRole::TurnSignal &&
@@ -962,6 +962,13 @@ void LvglDashboardCanvas::draw_battery(const application::BatteryChargeElement& 
 }
 
 void LvglDashboardCanvas::end_frame() {
+    // Keep warning sources stable across frames. Resetting red to gray in
+    // begin_frame and back to red during rendering repeatedly reopened images.
+    for (std::size_t side = 0; side < blind_spot_vehicle_count; ++side) {
+        set_image_source(blind_spot_vehicle_slots_[side],
+            &vehicle_image(wide_road_scene_, static_cast<int>(side),
+                           turn_signal_active_[side]));
+    }
     // Connection/data warnings take precedence over battery in the left footer.
     // Healthy Ready + fresh traffic emits no status text; only then is the
     // fresh battery widget shown. Resolve after every feature, independent of order.
@@ -994,7 +1001,7 @@ void LvglDashboardCanvas::end_frame() {
         if (parked || lv_obj_has_flag(vehicle, LV_OBJ_FLAG_HIDDEN)) hide(line);
         else show(*line);
     }
-    lv_image_set_src(road_vehicle_, &vehicle_image(wide_road_scene_, -1, false, parked));
+    set_image_source(road_vehicle_, &vehicle_image(wide_road_scene_, -1, false, parked));
     {
         if (parked) lv_obj_align(road_vehicle_, LV_ALIGN_BOTTOM_MID, 0, 0);
         else lv_obj_align(road_vehicle_, LV_ALIGN_CENTER, 0, wide_road_scene_ ? 92 : 46);
@@ -1002,10 +1009,8 @@ void LvglDashboardCanvas::end_frame() {
     if (!speed_drawn_this_frame_) {
         road_speed_kmh_ = 0;
     }
-    if (root_ != nullptr) {
-        lv_obj_invalidate(root_);
-    }
-    if (status_bar_ != nullptr) lv_obj_invalidate(status_bar_);
+    // LVGL invalidates changed widgets and line bounds itself. Invalidating
+    // both regions here repainted every sprite and label for a power update.
 }
 
 }  // namespace tesla_headup::platform

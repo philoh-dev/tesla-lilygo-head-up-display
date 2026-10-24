@@ -32,7 +32,7 @@ public:
 
     [[nodiscard]] esp_err_t initialize();
 
-    // Drains bounded copies of NimBLE callback events. Call this regularly
+    // Drains a snapshot of bounded NimBLE callback events. Call this regularly
     // from the same task that owns DashKitConnection.
     void process_events();
 
@@ -161,6 +161,9 @@ private:
         event_queue_buffer_{};
     std::atomic<bool> host_synced_{false};
     std::atomic<bool> scan_pending_{false};
+    std::atomic<std::uint32_t> dropped_notifications_{0};
+    std::atomic<std::uint32_t> dropped_control_events_{0};
+    dashkit::MonotonicTime last_queue_report_{};
     std::atomic<std::uint16_t> connection_handle_;
     std::uint8_t own_address_type_;
     dashkit::BleDeviceId bond_peer_{};

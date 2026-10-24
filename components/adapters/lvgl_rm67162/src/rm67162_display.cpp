@@ -52,7 +52,11 @@ constexpr std::uint8_t rgb565_pixel_format = 0x55;
 constexpr std::uint8_t landscape_orientation = 0x60;
 constexpr std::uint8_t mirrored_landscape_orientation = 0xE0;
 constexpr int initialization_attempts = 3;
+#if CONFIG_TESLA_HEADUP_DISPLAY_SELF_TEST
 constexpr std::uint64_t performance_report_interval_us = 1'000'000U;
+#else
+constexpr std::uint64_t performance_report_interval_us = 5'000'000U;
+#endif
 #if CONFIG_TESLA_HEADUP_DISPLAY_PROJECTION_MIRRORED
 constexpr bool projection_mirrored_by_default = true;
 #else
@@ -207,8 +211,9 @@ esp_err_t Rm67162Display::initialize() noexcept {
     }
 
     draw_buffer_a_ = heap_caps_malloc(draw_buffer_size, MALLOC_CAP_DMA);
-    draw_buffer_b_ = heap_caps_malloc(draw_buffer_size, MALLOC_CAP_DMA);
-    if (draw_buffer_a_ == nullptr || draw_buffer_b_ == nullptr) {
+    // write_pixels() completes its polling transfer before flush_ready(). A
+    // second buffer cannot overlap rendering with DMA on this synchronous path.
+    if (draw_buffer_a_ == nullptr) {
         return ESP_ERR_NO_MEM;
     }
 
@@ -226,17 +231,15 @@ esp_err_t Rm67162Display::initialize() noexcept {
         lvgl_display_, LV_COLOR_FORMAT_RGB565_SWAPPED);
     lv_display_set_user_data(lvgl_display_, this);
     lv_display_set_flush_cb(lvgl_display_, Rm67162Display::flush);
-#if CONFIG_TESLA_HEADUP_DISPLAY_SELF_TEST
     lv_display_add_event_cb(
         lvgl_display_, performance_event, LV_EVENT_ALL, this);
     last_performance_report_us_ =
         static_cast<std::uint64_t>(esp_timer_get_time());
-#endif
 
     lv_display_set_buffers(
         lvgl_display_,
         draw_buffer_a_,
-        draw_buffer_b_,
+        nullptr,
         draw_buffer_size,
         LV_DISPLAY_RENDER_MODE_PARTIAL);
 
@@ -253,7 +256,7 @@ esp_err_t Rm67162Display::initialize() noexcept {
     ESP_LOGI(
         tag,
         "Display ready: %dx%d, layout=%s, LILYGO polling QSPI, "
-        "two %u-byte DMA buffers",
+        "one %u-byte DMA buffer",
         logical_width,
         logical_height,
         dashboard_layout,
@@ -409,9 +412,7 @@ esp_err_t Rm67162Display::write_pixels(
 void Rm67162Display::process() noexcept {
     if (ready()) {
         (void)lv_timer_handler();
-#if CONFIG_TESLA_HEADUP_DISPLAY_SELF_TEST
         report_performance();
-#endif
     }
 }
 
@@ -472,15 +473,18 @@ void Rm67162Display::report_performance() noexcept {
     const auto flush_max = flush_max_us_.exchange(0, std::memory_order_relaxed);
     const auto fps = static_cast<std::uint32_t>(
         (static_cast<std::uint64_t>(refreshes) *
-         performance_report_interval_us) /
+         1'000'000U) /
         elapsed);
 
+    lv_mem_monitor_t lvgl_memory{};
+    lv_mem_monitor(&lvgl_memory);
     ESP_LOGI(
         tag,
-        "Self-test performance: fps=%lu refresh_avg=%luus refresh_max=%luus "
+        "Display performance: fps=%lu refresh_avg=%luus refresh_max=%luus "
         "flushes=%lu flush_avg=%luus flush_max=%luus "
         "free_internal=%u "
-        "min_internal=%u free_psram=%u min_psram=%u",
+        "min_internal=%u largest_internal=%u free_psram=%u min_psram=%u "
+        "lvgl_free=%u lvgl_largest=%u lvgl_frag=%u%% stack_free=%u",
         static_cast<unsigned long>(fps),
         static_cast<unsigned long>(
             refreshes == 0 ? 0 : refresh_total / refreshes),
@@ -492,9 +496,15 @@ void Rm67162Display::report_performance() noexcept {
             MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)),
         static_cast<unsigned>(heap_caps_get_minimum_free_size(
             MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)),
+        static_cast<unsigned>(heap_caps_get_largest_free_block(
+            MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)),
         static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_SPIRAM)),
         static_cast<unsigned>(
-            heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM)));
+            heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM)),
+        static_cast<unsigned>(lvgl_memory.free_size),
+        static_cast<unsigned>(lvgl_memory.free_biggest_size),
+        static_cast<unsigned>(lvgl_memory.frag_pct),
+        static_cast<unsigned>(uxTaskGetStackHighWaterMark(nullptr)));
 }
 
 void Rm67162Display::set_projection_mirrored(bool mirrored) noexcept {

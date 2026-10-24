@@ -183,6 +183,15 @@ No vehicle value should remain visible after its freshness timeout.
 
 ## Diagnostic CAN capture
 
+For lag or disconnect investigation, normal H619 firmware already emits
+`Display performance` every five seconds, including maximum refresh time,
+internal/PSRAM memory, LVGL free space/fragmentation and stack headroom.
+`BLE disconnected: reason=...` records the native disconnect reason.
+`BLE queue overflow: notifications=... control=...` reports dropped callback
+events at most once per second rather than logging every dropped packet in the
+NimBLE task. The application drains a bounded queue snapshot on each pass so
+incoming telemetry cannot indefinitely postpone connection timers.
+
 Diagnostic capture is disabled by default. Enable it only for controlled
 bring-up:
 

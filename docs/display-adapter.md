@@ -105,7 +105,20 @@ T-Display-S3 AMOLED 1.91-inch board. It uses:
 - LVGL 9.3 with a logical 536 x 240 landscape display;
 - ESP-IDF's SPI master driver with LILYGO-compatible polling QSPI transfers;
 - QSPI at 75 MHz; and
-- two partial RGB565 buffers of 40 lines each (42,880 bytes per buffer).
+- one partial RGB565 DMA buffer of 40 lines (42,880 bytes).
+
+The polling flush completes before LVGL reuses this buffer, so a second buffer
+cannot overlap transfer and drawing. Keeping one saves 42,880 bytes of internal
+RAM for BLE and other allocations. Road animation updates every 33 ms using
+elapsed time for motion; individual widgets/lines invalidate their changed
+areas without forcing a repaint of both complete dashboard regions.
+
+Normal firmware logs display timing and memory headroom every five seconds
+(every second in display self-test mode). Reports include internal/PSRAM free
+and minimum sizes, the largest internal allocation, LVGL pool free/largest
+blocks and fragmentation, and the owner task's stack high-water mark. These
+measurements distinguish a tight/fragmented LVGL pool from internal-heap
+pressure or slow refreshes; they do not alone establish a disconnect cause.
 
 The firmware explicitly enables LVGL's `RGB565_SWAPPED` software-rendering
 backend. LVGL 9.3 contains that backend but does not expose its enable switch

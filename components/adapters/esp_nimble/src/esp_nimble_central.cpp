@@ -107,7 +107,12 @@ void EspNimbleCentral::process_events() {
     }
 
     Event event;
-    while (xQueueReceive(event_queue_, &event, 0) == pdTRUE) {
+    // Process the current backlog, not an indefinitely replenished stream.
+    // The owner must also service connection/keepalive timers and rendering.
+    const auto pending = uxQueueMessagesWaiting(event_queue_);
+    for (UBaseType_t index = 0;
+         index < pending && xQueueReceive(event_queue_, &event, 0) == pdTRUE;
+         ++index) {
         switch (event.type) {
         case EventType::DeviceFound:
             observer_->on_device_found(
@@ -155,6 +160,17 @@ void EspNimbleCentral::process_events() {
                     event.payload.data(), event.payload_size},
                 event.timestamp);
             break;
+        }
+    }
+    const auto timestamp = now();
+    if (timestamp - last_queue_report_ >= std::chrono::seconds{1}) {
+        last_queue_report_ = timestamp;
+        const auto notifications = dropped_notifications_.exchange(0);
+        const auto control = dropped_control_events_.exchange(0);
+        if (notifications != 0 || control != 0) {
+            ESP_LOGW(tag, "BLE queue overflow: notifications=%lu control=%lu",
+                     static_cast<unsigned long>(notifications),
+                     static_cast<unsigned long>(control));
         }
     }
 }
@@ -638,6 +654,7 @@ int EspNimbleCentral::handle_gap_event(const ble_gap_event& event) {
             static_cast<unsigned>(event.mtu.value));
         break;
     case BLE_GAP_EVENT_DISCONNECT:
+        ESP_LOGW(tag, "BLE disconnected: reason=%d", event.disconnect.reason);
         characteristic_operation_ = CharacteristicOperation::None;
         connection_handle_.store(
             BLE_HS_CONN_HANDLE_NONE, std::memory_order_release);
@@ -866,8 +883,11 @@ void EspNimbleCentral::fail_characteristic_operation() {
 void EspNimbleCentral::enqueue(Event event) {
     if (event_queue_ == nullptr ||
         xQueueSend(event_queue_, &event, 0) != pdTRUE) {
-        ESP_LOGE(tag, "BLE event queue full; dropping event %u",
-                 static_cast<unsigned>(event.type));
+        // Never amplify an overloaded render loop with a log for every lost
+        // packet in the NimBLE host task. The owner reports totals once/second.
+        auto& dropped = event.type == EventType::Notification
+                            ? dropped_notifications_ : dropped_control_events_;
+        dropped.fetch_add(1, std::memory_order_relaxed);
     }
 }
 

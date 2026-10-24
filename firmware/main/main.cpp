@@ -292,13 +292,14 @@ extern "C" void app_main() {
     (void)render_scheduler.tick(now());
 
     while (true) {
-        const auto loop_now = now();
+        auto loop_now = now();
 #if CONFIG_TESLA_HEADUP_DISPLAY_SELF_TEST
         if (self_test_source.tick(loop_now)) {
             (void)system_status_presenter.on_telemetry_received(loop_now);
         }
 #else
         ble_central.process_events();
+        loop_now = now();
         dashkit_connection.tick(loop_now);
 #endif
         (void)speed_presenter.refresh(loop_now);
