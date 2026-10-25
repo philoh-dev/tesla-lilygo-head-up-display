@@ -229,6 +229,8 @@ Turn arrows occupy the top corners. The speed-limit sign sits directly above the
 percentage are bottom-left, with 18 px text centered beside the 18 px-high
 icon; gear uses the same text size at bottom-right, replaced by connection status
 when needed.
+In both layouts, the vehicle battery fill turns orange at 20% or below and
+returns to green above 20%.
 Between the battery percentage and gear, a horizontal bar shows gray power use
 to the left of its midpoint and green recuperation to the right. Both directions
 scale against the available BMS limit; zero or stale data clears the fill.

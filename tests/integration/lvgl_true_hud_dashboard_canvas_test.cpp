@@ -358,6 +358,13 @@ TEST_CASE("True HUD battery retains its outline at zero and clears unavailable c
     session.canvas.end_frame();
     const auto half = battery_pixels(true);
     CHECK(half > full / 3 && half < full * 2 / 3);
+    for (const auto percent : {19U, 20U, 21U, 20U, 51U}) {
+        session.canvas.draw_battery({static_cast<std::uint8_t>(percent)});
+        session.canvas.end_frame();
+        lv_refr_now(session.display);
+        CHECK_EQ(session.pixels[190 * 536 + 40],
+                 lv_color_to_u16(lv_color_hex(percent <= 20 ? 0xFFB000 : 0x5CBD68)));
+    }
     session.canvas.draw_battery({.percent=0});
     session.canvas.end_frame();
     CHECK_EQ(battery_pixels(true), 0U);

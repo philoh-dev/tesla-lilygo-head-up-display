@@ -101,6 +101,10 @@ port that a display adapter implements.
 
 ## Compile-time layouts
 
+Both layouts use an orange (`#FFB000`) vehicle-battery fill at 20% charge or
+below and green (`#5CBD68`) above 20%. At zero the empty outline remains visible.
+This charge warning does not change the green recuperation gauge.
+
 The road-scene left rail is a power/recuperation gauge. A grey fill grows upward
 from the center for positive battery power; a green (`#5CBD68`) fill grows
 downward for negative power. Each half spans 0–100% of its corresponding

@@ -921,7 +921,7 @@ TEST_CASE("battery occupies the left footer and yields to connection warnings in
     auto* label = lv_obj_get_child_by_type(battery, 0, &lv_label_class);
     const auto children = lv_obj_get_child_count(footer);
     using namespace tesla_headup::application;
-    for (const auto percent : {0U, 1U, 51U, 100U}) {
+    for (const auto percent : {0U, 1U, 19U, 20U, 21U, 51U, 100U}) {
         for (bool autopilot : {false, true}) {
             canvas.begin_frame();
             canvas.draw_battery({static_cast<std::uint8_t>(percent)});
@@ -944,6 +944,8 @@ TEST_CASE("battery occupies the left footer and yields to connection warnings in
                 CHECK_EQ(lv_obj_get_y(icon) + lv_obj_get_height(icon) / 2, footer_center);
             }
             CHECK_EQ(lv_obj_get_width(fill), static_cast<int>((40 * percent + 50) / 100));
+            CHECK(lv_color_eq(lv_obj_get_style_bg_color(fill, LV_PART_MAIN),
+                             lv_color_hex(percent <= 20 ? 0xFFB000 : 0x5CBD68)));
             CHECK_EQ(lv_obj_has_flag(fill, LV_OBJ_FLAG_HIDDEN), (40 * percent + 50) / 100 == 0);
             CHECK_EQ(lv_obj_get_child_count(footer), children);
         }

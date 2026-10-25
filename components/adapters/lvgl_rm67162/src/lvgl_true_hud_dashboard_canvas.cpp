@@ -183,6 +183,8 @@ void LvglDashboardCanvas::draw_battery(const application::BatteryChargeElement& 
     lv_label_set_text(battery_label_, text.data());
     const int width = (40 * element.percent + 50) / 100;
     lv_obj_set_width(battery_fill_, width);
+    lv_obj_set_style_bg_color(battery_fill_,
+        lv_color_hex(element.percent <= 20 ? 0xFFB000 : 0x5CBD68), 0);
     if (width == 0) hide(battery_fill_);
     else show(battery_fill_);
     show(battery_group_);

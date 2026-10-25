@@ -948,6 +948,8 @@ void LvglDashboardCanvas::draw_battery(const application::BatteryChargeElement& 
     const auto percent = element.percent;
     const auto width = (40 * percent + 50) / 100;
     lv_obj_set_width(battery_fill_, width);
+    lv_obj_set_style_bg_color(battery_fill_,
+        lv_color_hex(percent <= 20 ? 0xFFB000 : 0x5CBD68), LV_PART_MAIN);
     if (width == 0) hide(battery_fill_);
     else show(*battery_fill_);
     // Small bounded stack buffer: no heap formatting or per-frame widget allocation.
