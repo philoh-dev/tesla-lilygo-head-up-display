@@ -21,7 +21,10 @@ revision still requires its own profile and hardware validation.
 The default canvas centers speed and unit together on a stable baseline. The
 speed-limit sign sits above the unit, turn arrows occupy the top corners, and
 battery/gear text sits along the bottom. Blind-spot icons are white for occupancy
-and red while signaling toward that side. Inter tabular digits and a 35 px
+and red while signaling toward that side. The icons are 40×40 px. A horizontal
+footer gauge fills left for power use and right in green for recuperation,
+scaled against the available BMS limits; stale data clears the fill.
+Inter tabular digits and a 35 px
 clear border are shared with the simulator.
 
 ## Optional road-scene layout

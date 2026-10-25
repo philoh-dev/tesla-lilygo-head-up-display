@@ -48,6 +48,8 @@ private:
         blind_spot_vehicle_slots_{};
     lv_obj_t* speed_limit_sign_{nullptr};
     lv_obj_t* power_fill_{nullptr};
+    lv_obj_t* power_track_{nullptr};
+    std::int16_t power_permille_{0};
     lv_obj_t* battery_group_{nullptr};
     lv_obj_t* battery_fill_{nullptr};
     lv_obj_t* battery_label_{nullptr};

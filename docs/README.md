@@ -10,8 +10,10 @@ for cloning, simulation, and flashing.
 ![Default LILYGO true_hud preview](images/dashboard-true-hud.png)
 
 `true_hud` is the default canvas: centered speed and unit, speed limit above
-the unit, corner turn arrows, compact blind-spot warnings, and battery and
-gear/connection text along the bottom. Inter tabular digits and a 35 px clear
+the unit, corner turn arrows, 40×40 px blind-spot warnings, and battery and
+gear/connection text along the bottom. A horizontal gauge between the battery
+and gear fills left in gray for power use and right in green for recuperation.
+Inter tabular digits and a 35 px clear
 border remain stable during pixel orbit.
 
 On Windows, `scripts/flash.ps1 COM3` builds, size-checks, flashes and monitors

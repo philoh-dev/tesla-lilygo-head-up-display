@@ -106,7 +106,11 @@ from the center for positive battery power; a green (`#5CBD68`) fill grows
 downward for negative power. Each half spans 0–100% of its corresponding
 available BMS limit. Values are clamped, and zero, stale, missing, or unavailable
 power produces no fill. The neutral track remains visible without a center marker.
-The `true_hud` layout omits this gauge.
+The `true_hud` layout uses a 6 px-high horizontal gauge between the battery
+percentage and gear. Grey power use fills left from its midpoint; green
+recuperation fills right. It uses the same BMS limit scaling and freshness
+rules as the road-scene rail. The track stays visible with no fill at zero or
+without fresh data, and shortens to clear longer connection-status text.
 
 `PowerIndicator` receives a typed, signed utilization through `PowerPresenter`.
 Electrical state and power limits must both be fresh within 500 ms. Either
@@ -123,10 +127,11 @@ Two LVGL layouts implement the same `DashboardCanvas` contract:
   text is 18 px and vertically centered on the 18 px-high battery icon. A
   35 px clear border is maintained throughout pixel orbit. Connection status
   takes precedence over gear; absent or stale values are cleared each frame.
-  A 32 px blind-spot radar/car icon sits between each turn arrow and its footer
+  A 40 px blind-spot radar/car icon sits between each turn arrow and its footer
   corner. Occupied sides are white; signaling toward an occupied side turns
   that icon red, including during the dark blink phase. Clear or stale sides
-  hide independently. Vehicle, road, Autopilot and power graphics are omitted;
+  hide independently. A horizontal power/recuperation gauge shares the footer;
+  vehicle, road and Autopilot graphics are omitted;
 - `road_scene` places speed beside a fixed rail and adds perspective lane
   segments plus a centered vehicle viewed from behind at an elevated angle.
   Turn signals flank the road. Both sizes put the speed limit at the top-right and gear, Autopilot and

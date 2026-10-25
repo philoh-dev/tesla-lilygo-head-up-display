@@ -5,7 +5,9 @@
 #include "tesla_headup/application/dashboard/centered_vehicle_speed.hpp"
 #include "tesla_headup/application/dashboard/speed_limit_indicator.hpp"
 #include "tesla_headup/application/hud_runtime/speed_limit_presenter.hpp"
+#include "tesla_headup/application/hud_runtime/power_presenter.hpp"
 #include <array>
+#include <algorithm>
 #include <cstdio>
 #include <string_view>
 
@@ -35,6 +37,14 @@ struct Session {
     ~Session() { canvas.shutdown(); lv_display_delete(display); lv_deinit(); }
     lv_obj_t* root() { return lv_obj_get_child(lv_display_get_screen_active(display), 0); }
     lv_obj_t* label(int slot) { return lv_obj_get_child_by_type(root(), slot, &lv_label_class); }
+    lv_obj_t* power_track() {
+        for (std::uint32_t i = 0; i < lv_obj_get_child_count(root()); ++i) {
+            auto* child = lv_obj_get_child(root(), i);
+            if (lv_color_eq(lv_obj_get_style_bg_color(child, 0), lv_color_hex(0x2B3236)))
+                return child;
+        }
+        return nullptr;
+    }
     void frame(std::string_view speed) {
         canvas.begin_frame();
         canvas.draw_text({.text=speed, .role=application::TextRole::PrimaryValue});
@@ -202,6 +212,72 @@ TEST_CASE("True HUD gives status precedence over gear and clears stale content")
     CHECK_EQ(lv_obj_get_child_count(session.root()), objects);
 }
 
+TEST_CASE("True HUD horizontal power fills left and recuperation fills right without footer overlap") {
+    Session session;
+    session.frame("130");
+    auto* track = session.power_track();
+    CHECK(track != nullptr);
+    auto* fill = lv_obj_get_child(track, 0);
+    for (const auto level : {500, -500, 2000, -2000, 0}) {
+        session.canvas.draw_power({static_cast<std::int16_t>(level)});
+        session.canvas.end_frame();
+        lv_refr_now(session.display);
+        const int half = lv_obj_get_width(track) / 2;
+        const int width = (half * std::min(std::abs(level), 1000) + 500) / 1000;
+        CHECK(lv_obj_get_x(track) > lv_obj_get_x(session.label(5)) + lv_obj_get_width(session.label(5)));
+        CHECK(lv_obj_get_x(track) + lv_obj_get_width(track) < lv_obj_get_x(session.label(3)));
+        CHECK_EQ(lv_obj_get_y(track) * 2 + lv_obj_get_height(track), 388);
+        CHECK_EQ(lv_obj_has_flag(fill, LV_OBJ_FLAG_HIDDEN), level == 0);
+        if (level == 0) continue;
+        CHECK_EQ(lv_obj_get_width(fill), width);
+        CHECK_EQ(lv_obj_get_x(fill), level > 0 ? half - width : half);
+        const int x = lv_obj_get_x(track) + half + (level > 0 ? -1 : 1);
+        const int y = lv_obj_get_y(track) + 3;
+        CHECK_EQ(session.pixels[y * 536 + x],
+                 lv_color_to_u16(lv_color_hex(level > 0 ? 0xB8C1C5 : 0x5CBD68)));
+    }
+    session.canvas.draw_power({-1000});
+    session.canvas.draw_text({.text="PAIRING REQUIRED", .role=application::TextRole::StatusCritical});
+    session.canvas.end_frame();
+    CHECK(lv_obj_get_x(track) + lv_obj_get_width(track) <= lv_obj_get_x(session.label(2)) - 16);
+    session.canvas.begin_frame();
+    session.canvas.end_frame();
+    CHECK(lv_obj_has_flag(fill, LV_OBJ_FLAG_HIDDEN));
+}
+
+TEST_CASE("True HUD power bar follows BMS utilization and clears stale telemetry") {
+    using namespace std::chrono_literals;
+    Session session;
+    application::TelemetryStore telemetry;
+    dashkit::DashKitTelemetryIngestor ingestor{telemetry};
+    application::PowerIndicator feature;
+    application::Dashboard dashboard{session.canvas};
+    CHECK(dashboard.add_feature(feature));
+    application::DashboardRenderScheduler scheduler{dashboard};
+    application::PowerPresenter presenter{telemetry, feature, scheduler};
+    std::array<std::uint8_t, 29> packet{
+        2, 0,0,0,0, 1, 0x52,0x02,0,0, 4, 0x40,0x1F,0x00,0x7D,
+           0,0,0,0, 1, 0x32,0x01,0,0, 4, 0x40,0x9C,0x60,0x70};
+    CHECK_EQ(ingestor.ingest(packet, 0ms).decoded_power_frames, 2U);
+    CHECK(presenter.refresh(0ms));
+    CHECK(scheduler.tick(0ms));
+    auto* track = session.power_track();
+    CHECK(track != nullptr);
+    auto* fill = lv_obj_get_child(track, 0);
+    CHECK(!lv_obj_has_flag(fill, LV_OBJ_FLAG_HIDDEN));
+    CHECK(lv_obj_get_x(fill) < lv_obj_get_width(track) / 2);
+    packet[27] = 0xE8; packet[28] = 0x03; // -100 A, half the available regen limit.
+    CHECK_EQ(ingestor.ingest(packet, 50ms).decoded_power_frames, 2U);
+    CHECK(presenter.refresh(50ms));
+    CHECK(scheduler.tick(50ms));
+    CHECK_EQ(lv_obj_get_x(fill), lv_obj_get_width(track) / 2);
+    CHECK(lv_color_eq(lv_obj_get_style_bg_color(fill, 0), lv_color_hex(0x5CBD68)));
+    CHECK(presenter.refresh(551ms));
+    CHECK(scheduler.tick(551ms));
+    CHECK(lv_obj_has_flag(fill, LV_OBJ_FLAG_HIDDEN));
+    CHECK(!lv_obj_has_flag(track, LV_OBJ_FLAG_HIDDEN));
+}
+
 TEST_CASE("True HUD uses tabular Inter figures") {
     for (const auto* font : {&tesla_headup_inter_regular_100, &tesla_headup_inter_medium_18,
                             &tesla_headup_inter_medium_24, &tesla_headup_inter_semibold_18}) {
@@ -318,7 +394,9 @@ TEST_CASE("True HUD blind-spot icons track occupancy and matching turn intent in
                     CHECK_EQ(lv_obj_has_flag(icon, LV_OBJ_FLAG_HIDDEN), (occupied & (1U << side)) == 0);
                     CHECK_EQ(lv_obj_get_style_image_recolor_opa(icon, 0),
                              (signals & (1U << side)) != 0 ? LV_OPA_COVER : LV_OPA_TRANSP);
-                    CHECK_EQ(lv_obj_get_x(icon), side == 0 ? 37 : 467);
+                    CHECK_EQ(lv_obj_get_x(icon), side == 0 ? 37 : 459);
+                    CHECK_EQ(lv_obj_get_width(icon), 40);
+                    CHECK_EQ(lv_obj_get_height(icon), 40);
                     CHECK(lv_obj_get_y(icon) > 67);
                     CHECK(lv_obj_get_y(icon) + lv_obj_get_height(icon) < 185);
                 }

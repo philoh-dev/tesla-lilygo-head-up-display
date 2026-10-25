@@ -108,12 +108,64 @@ def project_turn_arrow(right: bool = False) -> Image.Image:
     return ImageOps.mirror(image) if right else image
 
 
+def project_blind_spot(size: int = 40, right: bool = False,
+                       warning: bool = False) -> Image.Image:
+    """Rasterize the canonical SVG paths at final size with rounded strokes."""
+    from fontTools.pens.basePen import BasePen
+    from fontTools.svgLib.path import parse_path
+
+    svg = ET.parse(PROJECT_ICON_DIRECTORY / "blind-spot-left.svg").getroot()
+    group = svg.find("{http://www.w3.org/2000/svg}g")
+    scale = 16
+    factor = size * scale / 32
+    image = Image.new("RGBA", (size * scale, size * scale))
+    draw = ImageDraw.Draw(image)
+    color = (255, 69, 58, 255) if warning else (255, 255, 255, 255)
+    stroke = round(float(group.attrib["stroke-width"]) * factor)
+
+    class StrokePen(BasePen):
+        def _moveTo(self, point):
+            self.points = [point]
+
+        def _lineTo(self, point):
+            self.points.append(point)
+
+        def _curveToOne(self, first, second, end):
+            start = self._getCurrentPoint()
+            for step in range(1, 33):
+                t = step / 32
+                self.points.append(tuple((1-t)**3 * start[a] +
+                    3*(1-t)**2*t * first[a] + 3*(1-t)*t*t * second[a] +
+                    t**3 * end[a] for a in (0, 1)))
+
+        def _closePath(self):
+            self.points.append(self.points[0])
+            self._endPath()
+
+        def _endPath(self):
+            points = [(x * factor, y * factor) for x, y in self.points]
+            draw.line(points, fill=color, width=stroke, joint="curve")
+            radius = stroke / 2
+            for x, y in points:
+                draw.ellipse((x-radius, y-radius, x+radius, y+radius), fill=color)
+
+    for path in group.findall("{http://www.w3.org/2000/svg}path"):
+        parse_path(path.attrib["d"], StrokePen(None))
+    image = image.resize((size, size), Image.Resampling.BOX)
+    return ImageOps.mirror(image) if right else image
+
+
 def main() -> None:
     OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
     project_output = PROJECT_ICON_DIRECTORY / "prepared"
     project_output.mkdir(parents=True, exist_ok=True)
     for right, filename in ((False, "turn-left.png"), (True, "turn-right.png")):
         project_turn_arrow(right).save(project_output / filename, optimize=True)
+    for right, side in ((False, "left"), (True, "right")):
+        for warning in (False, True):
+            suffix = "-warning" if warning else ""
+            project_blind_spot(right=right, warning=warning).save(
+                project_output / f"blind-spot-{side}{suffix}.png", optimize=True)
     native_autopilot().save(OUTPUT_DIRECTORY / "autopilot-road-scene-wide.png",
                            format="PNG", optimize=True)
     native_autopilot((38, 36)).save(OUTPUT_DIRECTORY / "autopilot-road-scene.png",

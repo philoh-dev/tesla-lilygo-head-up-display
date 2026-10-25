@@ -44,8 +44,8 @@ INDICATORS = (
 )
 
 TRUE_HUD_INDICATORS = (
-    Indicator("blind-spot-left.png", "hud_blind_spot_left_image", 32, 32),
-    Indicator("blind-spot-right.png", "hud_blind_spot_right_image", 32, 32),
+    Indicator("blind-spot-left.png", "hud_blind_spot_left_image", 40, 40),
+    Indicator("blind-spot-right.png", "hud_blind_spot_right_image", 40, 40),
 )
 
 ROAD_SCENE_INDICATORS = (

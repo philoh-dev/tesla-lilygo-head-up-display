@@ -18,7 +18,7 @@ vehicle captures or evidence of validated live CAN mappings.
 
 | Image | Resolution | State |
 | --- | --- | --- |
-| [LILYGO true HUD](dashboard-true-hud.png) | 536 x 240 | Both blind spots occupied; left signal makes its icon red, right icon white |
+| [LILYGO true HUD](dashboard-true-hud.png) | 536 x 240 | Both blind spots occupied; left signal makes its icon red, right icon white; leftward power-use fill |
 | [LILYGO driving](dashboard-road-scene-simulator.png) | 536 x 240 | Both blind spots occupied, left signal active: left car and divider red |
 | [Signals off](dashboard-road-scene-no-signal.png) | 536 x 240 | Both cars gray, both ego-lane dividers Autopilot blue |
 | [Right signal](dashboard-road-scene-right-signal.png) | 536 x 240 | Mirrored right car and right divider red; left car gray |
@@ -74,6 +74,8 @@ python3 -c "from PIL import Image; Image.open('.cache/true-hud.bmp').convert('RG
 
 This canvas has a 35 px clear border and corner battery/gear labels rather than
 an 85/15 road/footer split. Its blind-spot warnings use icons instead of cars.
+The horizontal footer gauge fills left for power use and right for recuperation;
+add `--preview-regeneration` to capture the green rightward fill.
 
 ## Other images
 

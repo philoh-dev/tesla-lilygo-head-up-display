@@ -47,15 +47,16 @@ covered by the root license and attribution notice.
 
 ## Blind-spot artwork
 
-`blind-spot-left.svg` and `blind-spot-right.svg` are 32 x 32 rear-view car
+`blind-spot-left.svg` and `blind-spot-right.svg` are 40 x 40 rear-view car
 outlines with two radar arcs on the occupied side. The right icon is an exact
 horizontal reflection of the left. White indicates occupancy; the matching
 `-warning.svg` variants use red `#FF453A` for occupancy with that turn signal
 active. Clear blind spots should hide the icon.
 
-Transparent antialiased 32 x 32 PNG exports are in `prepared/`. The `true_hud`
+Transparent antialiased 40 x 40 PNG exports are in `prepared/`. The `true_hud`
 canvas renders each icon between its turn arrow and battery/gear corner.
 The white images are stored in `true_hud_indicator_images.cpp`; LVGL recolors
 only the occupied side with active turn intent to warning red. Dark blink
 phases retain that warning. Clear or stale occupancy hides the icon. `generate_indicator_images.py` regenerates and
-checks the descriptors, and no runtime scaling is used.
+checks the descriptors, and no runtime scaling is used. The preparation script rasterizes the canonical
+SVG paths with supersampling, then mirrors the finished left image.

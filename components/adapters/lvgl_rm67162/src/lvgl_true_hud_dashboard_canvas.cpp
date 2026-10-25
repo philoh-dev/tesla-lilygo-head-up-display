@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <cstdlib>
 
 namespace tesla_headup::platform {
 namespace {
@@ -12,6 +13,7 @@ namespace {
 constexpr int inset = 35 + LvglPixelOrbit::maximum_offset;
 constexpr int limit_diameter = 54;
 constexpr int battery_icon_height = 18;
+constexpr int power_bar_height = 6;
 constexpr auto foreground = 0xFFFFFFU;
 constexpr auto secondary = 0xB8C1C5U;
 
@@ -76,6 +78,9 @@ void LvglDashboardCanvas::shutdown() noexcept {
     battery_label_ = nullptr;
     battery_group_ = nullptr;
     battery_fill_ = nullptr;
+    power_track_ = nullptr;
+    power_fill_ = nullptr;
+    power_permille_ = 0;
     text_slots_.fill(nullptr);
     image_slots_.fill(nullptr);
     blind_spot_vehicle_slots_.fill(nullptr);
@@ -107,6 +112,8 @@ bool LvglDashboardCanvas::initialize(lv_display_t& display) noexcept {
     box(body, 2, 2, 40, battery_icon_height - 4, 0x252A2D, 1);
     box(battery_group_, 44, 5, 3, 8, 0x7C8589, 1);
     battery_fill_ = box(body, 2, 2, 40, battery_icon_height - 4, 0x5CBD68, 1);
+    power_track_ = box(root_, 0, 0, 1, power_bar_height, 0x2B3236, 3);
+    power_fill_ = box(power_track_, 0, 0, 1, power_bar_height, secondary, 0);
     // All images are small project-created indicators, prepared at native size.
     for (std::size_t i = 0; i < 2; ++i) image_slots_[i] = lv_image_create(root_);
     for (std::size_t side = 0; side < 2; ++side) {
@@ -129,6 +136,8 @@ void LvglDashboardCanvas::begin_frame() {
     hide(speed_limit_sign_);
     hide(battery_label_);
     hide(battery_group_);
+    hide(power_fill_);
+    power_permille_ = 0;
 }
 void LvglDashboardCanvas::draw_text(const application::TextElement& element) {
     if (!ready()) return;
@@ -179,7 +188,11 @@ void LvglDashboardCanvas::draw_battery(const application::BatteryChargeElement& 
     show(battery_group_);
     show(battery_label_);
 }
-void LvglDashboardCanvas::draw_power(const application::PowerBarElement&) {}
+void LvglDashboardCanvas::draw_power(const application::PowerBarElement& element) {
+    if (!ready()) return;
+    power_permille_ = static_cast<std::int16_t>(
+        std::clamp<std::int32_t>(element.permille, -1000, 1000));
+}
 void LvglDashboardCanvas::draw_edge_gradient(const application::EdgeGradientElement& element) {
     if (!ready()) return;
     show(blind_spot_vehicle_slots_[element.edge == application::DisplayEdge::Left ? 0 : 1]);
@@ -236,6 +249,31 @@ void LvglDashboardCanvas::end_frame() {
     footer(text_slots_[3], root_, true);
     // A connection warning takes precedence regardless of feature draw order.
     if (!lv_obj_has_flag(text_slots_[2], LV_OBJ_FLAG_HIDDEN)) hide(text_slots_[3]);
+    lv_obj_update_layout(root_);
+    // Reserve enough room for 100% so charge changes cannot shift the gauge.
+    // A longer connection message shortens it rather than covering it.
+    const int bar_left = inset + 58 + 50 + 16;
+    auto* right_label = !lv_obj_has_flag(text_slots_[2], LV_OBJ_FLAG_HIDDEN)
+                            ? text_slots_[2] : text_slots_[3];
+    const int bar_right = (lv_obj_has_flag(right_label, LV_OBJ_FLAG_HIDDEN)
+                              ? lv_obj_get_width(root_) - inset
+                              : lv_obj_get_x(right_label)) - 16;
+    const int half = std::max(0, (bar_right - bar_left) / 2);
+    const int bar_y = lv_obj_get_height(root_) - inset -
+                      battery_icon_height / 2 - power_bar_height / 2;
+    lv_obj_set_pos(power_track_, bar_left, bar_y);
+    lv_obj_set_width(power_track_, half * 2);
+    if (half < 8) hide(power_track_);
+    else show(power_track_);
+    const int fill = (half * std::abs(static_cast<int>(power_permille_)) + 500) / 1000;
+    if (fill == 0 || half < 8) hide(power_fill_);
+    else {
+        lv_obj_set_pos(power_fill_, power_permille_ > 0 ? half - fill : half, 0);
+        lv_obj_set_width(power_fill_, fill);
+        lv_obj_set_style_bg_color(power_fill_,
+            lv_color_hex(power_permille_ > 0 ? secondary : 0x5CBD68), 0);
+        show(power_fill_);
+    }
     lv_obj_update_layout(root_);
     lv_obj_invalidate(root_);
 }

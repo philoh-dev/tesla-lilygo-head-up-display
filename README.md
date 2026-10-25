@@ -229,7 +229,10 @@ Turn arrows occupy the top corners. The speed-limit sign sits directly above the
 percentage are bottom-left, with 18 px text centered beside the 18 px-high
 icon; gear uses the same text size at bottom-right, replaced by connection status
 when needed.
-Inter uses tabular digits. Small blind-spot icons sit between each turn arrow
+Between the battery percentage and gear, a horizontal bar shows gray power use
+to the left of its midpoint and green recuperation to the right. Both directions
+scale against the available BMS limit; zero or stale data clears the fill.
+Inter uses tabular digits. The 40×40 px blind-spot icons sit between each turn arrow
 and the battery/gear footer: white when occupied, red while signaling toward
 that side, and hidden when clear or stale.
 
